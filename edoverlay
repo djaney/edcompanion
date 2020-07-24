@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+from screen import Window
+from data.journal import JournalWatcher
+import pygame
+import argparse
+import re
+from datetime import datetime
+from overlays import cards
+import platform
+import os
+
+def main(args):
+    if args.time == 'now':
+        last_update = datetime.now().timestamp()
+    else:
+        last_update = None
+
+    if args.dir == '':
+        if platform.system().lower() == 'linux':
+            journal_path = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
+                           'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER',''))
+        if platform.system().lower() == 'windows':
+            journal_path = 'C:\\Users\\{}\\Saved Games\\Frontier Developments\\Elite Dangerous'\
+                .format(os.environ.get('userprofile', ''))
+    else:
+        journal_path = args.dir
+
+    size_pattern = re.compile("^[0-9]+x[0-9]+$")
+    if args.size != '' and size_pattern.match(args.size):
+        size = tuple(map(lambda i: int(i), args.size.split("x")))
+    else:
+        size = None
+
+    win = Window(size=size)
+
+    if args.background != '':
+        win.mask_color = pygame.Color(args.background)
+
+    journal = JournalWatcher(
+        watch=['Scan'],
+        directory=journal_path
+    )
+    exploration_card = cards.ExplorationCard(win.screen, journal)
+    journal.watch = exploration_card.watched()
+    while win.loop():
+        if journal.has_new(last_update=last_update):
+            win.screen.fill(win.mask_color)
+            exploration_card.render()
+
+        pygame.display.update()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Show overlay window with green background')
+    parser.add_argument('--time', '-t', type=str, choices=['now', 'all'], default='now')
+    parser.add_argument('--background', '-b', type=str, default='')
+    parser.add_argument('--size', '-s', type=str, default='')
+    parser.add_argument('--dir', '-d', type=str, default='')
+
+    args = parser.parse_args()
+    main(args)
