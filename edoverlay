@@ -21,7 +21,7 @@ def main(args):
                            'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER',''))
         if platform.system().lower() == 'windows':
             journal_path = 'C:\\Users\\{}\\Saved Games\\Frontier Developments\\Elite Dangerous'\
-                .format(os.environ.get('userprofile', ''))
+                .format(os.environ.get('USERPROFILE', ''))
     else:
         journal_path = args.dir
 
