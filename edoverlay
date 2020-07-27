@@ -36,16 +36,33 @@ def main(args):
     if args.background != '':
         win.mask_color = pygame.Color(args.background)
 
+    watch_list = []
+    card_list = []
+
     journal = JournalWatcher(
-        watch=['Scan'],
+        watch=[],
         directory=journal_path
     )
-    exploration_card = cards.ExplorationCard(win.screen, journal)
-    journal.watch = exploration_card.watched()
+
+    if args.activity == 'exploration':
+        # exploration card
+        card = cards.ExplorationCard(win.screen, journal, position=(0, 1), card_size=(1, 2))
+        watch_list += card.watched()
+        card_list.append(card)
+        # current system card
+        card = cards.CurrentSystemCard(win.screen, journal, position=(2, 1), text_align='right', card_size=(1, 2))
+        watch_list += card.watched()
+        card_list.append(card)
+    else:
+        raise NotImplementedError("{} not implemented".format(args.activity))
+
+    journal.watch = list(set(watch_list))
+
     while win.loop():
         if journal.has_new(last_update=last_update):
             win.screen.fill(win.mask_color)
-            exploration_card.render()
+            for card in card_list:
+                card.render()
 
         pygame.display.update()
 
@@ -56,6 +73,7 @@ if __name__ == "__main__":
     parser.add_argument('--background', '-b', type=str, default='')
     parser.add_argument('--size', '-s', type=str, default='')
     parser.add_argument('--dir', '-d', type=str, default='')
+    parser.add_argument('--activity', '-a', type=str, choices=['exploration'], default='exploration')
 
     args = parser.parse_args()
     main(args)
