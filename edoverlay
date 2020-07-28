@@ -26,12 +26,16 @@ def main(args):
         journal_path = args.dir
 
     print('Journal directory: {}'.format(journal_path))
-
-    size_pattern = re.compile("^[0-9]+x[0-9]+$")
-    if args.size != '' and size_pattern.match(args.size):
-        size = tuple(map(lambda i: int(i), args.size.split("x")))
+    if args.size == '1080p':
+        size = (1280, 720)
+    elif args.size == '720p':
+        size = (1920, 1080)
     else:
-        size = None
+        size_pattern = re.compile("^[0-9]+x[0-9]+$")
+        if args.size != '' and size_pattern.match(args.size):
+            size = tuple(map(lambda i: int(i), args.size.split("x")))
+        else:
+            size = None
 
     win = Window(size=size)
 
@@ -73,8 +77,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Show overlay window with green background')
     parser.add_argument('--time', '-t', type=str, choices=['now', 'all'], default='now')
     parser.add_argument('--background', '-b', type=str, default='')
-    parser.add_argument('--size', '-s', type=str, default='')
-    parser.add_argument('--dir', '-d', type=str, default='')
+    parser.add_argument('--size', '-s', type=str, default='', help="[width]x[height] or 720p or 1080p")
+    parser.add_argument('--dir', '-d', type=str, default='', help="path to journal directory")
     parser.add_argument('--activity', '-a', type=str, choices=['exploration'], default='exploration')
 
     args = parser.parse_args()
