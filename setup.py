@@ -13,7 +13,7 @@ setup(
     ],
     entrypoints={
         'console_scripts': [
-            'edoverlay = .edoverlay:main',
+            'edoverlay = bin.edoverlay:main',
         ]
   },
     package_data={
