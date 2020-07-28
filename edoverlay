@@ -25,6 +25,8 @@ def main(args):
     else:
         journal_path = args.dir
 
+    print('Journal directory: {}'.format(journal_path))
+
     size_pattern = re.compile("^[0-9]+x[0-9]+$")
     if args.size != '' and size_pattern.match(args.size):
         size = tuple(map(lambda i: int(i), args.size.split("x")))
