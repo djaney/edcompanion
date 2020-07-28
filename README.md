@@ -1,6 +1,6 @@
 # edoverlay
 Elite dangerous streaming overlay
 
-```
-python3 -m pip install -e git+git@github.com:djaney/edoverlay.git#egg=master
-```
+
+    pip3 install https://github.com/djaney/edoverlay/archive/master.zip#egg=edoverlay
+
