@@ -11,10 +11,10 @@ setup(
     install_requires=[
         'pygame>=1.9,<2'
     ],
-     entrypoints={
-    'console_scripts': [
-      'edoverlay = edoverlay:main',
-    ]
+    entrypoints={
+        'console_scripts': [
+            'edoverlay = edoverlay:main',
+        ]
   },
     package_data={
         "overlays": ["*.ttf"],
