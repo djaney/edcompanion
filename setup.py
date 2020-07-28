@@ -12,7 +12,7 @@ setup(
         'pygame>=1.9,<2'
     ],
     scripts=['edoverlay'],
-    data_files={
-        "": ["*.ttf"],
+    package_data={
+        "overlays": ["*.ttf"],
     }
 )
