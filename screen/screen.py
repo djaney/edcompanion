@@ -13,7 +13,7 @@ class Window(object):
         if size is None:
             size = (0,0)
 
-        self.screen = pygame.display.set_mode(size, pygame.NOFRAME)
+        self.screen = pygame.display.set_mode(size)
         self.screen.fill(self.mask_color)
 
     @property
