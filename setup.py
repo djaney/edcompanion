@@ -13,6 +13,6 @@ setup(
     ],
     scripts=['edoverlay'],
     data_files={
-        "overlays": ["*.ttf"],
+        "": ["*.ttf"],
     }
 )
