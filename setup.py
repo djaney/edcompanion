@@ -11,5 +11,6 @@ setup(
     install_requires=[
         'pygame>=1.9,<2'
     ],
-    scripts=['edoverlay']
+    scripts=['edoverlay'],
+    data_files=['overlays/data-latin.ttf']
 )
