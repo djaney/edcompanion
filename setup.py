@@ -6,16 +6,17 @@ setup(
     url='https://github.com/mypackage.git',
     author='Djane Rey Mabelin',
     author_email='thedjaney@gmail.com',
-    description='Description of my package',
+    description='Creates a streaming overlay for Elite: Dangerous',
+    python_requires=">=3.5",
     packages=find_packages(),
     install_requires=[
         'pygame>=1.9,<2'
     ],
-    entrypoints={
+    entry_points={
         'console_scripts': [
-            'edoverlay = bin.edoverlay:main',
+            'edoverlay=scripts.edoverlay:main',
         ]
-  },
+    },
     package_data={
         "overlays": ["*.ttf"],
     }

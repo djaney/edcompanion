@@ -9,21 +9,36 @@ from overlays import cards
 import platform
 import os
 
-def main(args):
+
+def main():
+
+    if platform.system().lower() == 'linux':
+        default_dir = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
+                       'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER',''))
+    elif platform.system().lower() == 'windows':
+        default_dir = '{}\\Saved Games\\Frontier Developments\\Elite Dangerous'\
+            .format(os.environ.get('USERPROFILE', ''))
+    else:
+        default_dir = None
+
+    parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
+    parser.add_argument('--time', '-t', type=str, choices=['now', 'all', 'today'], default='today',
+                        help='timestamp to start watching the journal')
+    parser.add_argument('--background', '-b', type=str, default='', help='background color name (ex. black)')
+    parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
+    parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
+    parser.add_argument('--activity', '-a', type=str, choices=['exploration'], default='exploration')
+
+    args = parser.parse_args()
+
     if args.time == 'now':
         last_update = datetime.now().timestamp()
+    elif args.time == 'today':
+        last_update = datetime.now().replace(hour=0, minute=0).timestamp()
     else:
         last_update = None
 
-    if args.dir == '':
-        if platform.system().lower() == 'linux':
-            journal_path = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
-                           'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER',''))
-        if platform.system().lower() == 'windows':
-            journal_path = '{}\\Saved Games\\Frontier Developments\\Elite Dangerous'\
-                .format(os.environ.get('USERPROFILE', ''))
-    else:
-        journal_path = args.dir
+    journal_path = args.dir
 
     print('Journal directory: {}'.format(journal_path))
     if args.size == '720p':
@@ -74,12 +89,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Show overlay window with green background')
-    parser.add_argument('--time', '-t', type=str, choices=['now', 'all'], default='now')
-    parser.add_argument('--background', '-b', type=str, default='')
-    parser.add_argument('--size', '-s', type=str, default='', help="[width]x[height] or 720p or 1080p")
-    parser.add_argument('--dir', '-d', type=str, default='', help="path to journal directory")
-    parser.add_argument('--activity', '-a', type=str, choices=['exploration'], default='exploration')
 
-    args = parser.parse_args()
-    main(args)
+    main()
