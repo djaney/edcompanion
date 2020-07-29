@@ -3,6 +3,8 @@ from overlays import constants
 import pygame
 
 
+
+
 class BaseCard:
     def __init__(self, screen, journal, position=(0, 0), text_align='left', card_size=(1, 1)):
         self.screen = screen
@@ -18,6 +20,11 @@ class BaseCard:
 
         self.surface = pygame.Surface(size, pygame.SRCALPHA)
         self.surface.fill((0, 0, 0, 0))
+
+    @staticmethod
+    def mpss_to_g(mpss):
+        return mpss / 9.80665
+
 
     def print_line(self, screen, font, text, x=0, y=0):
         name_text = font.render(text, True, constants.COCKPIT_COLOR)
@@ -188,9 +195,11 @@ class CurrentSystemCard(BaseCard):
                 if 'Landable' in b and b['Landable'] != '':
                     flags.append('L')
                     is_landable = True
-                    if 'SurfaceGravity' in b and b['SurfaceGravity'] >= 10:
-                        flags.append("{}G".format(round(b['SurfaceGravity'])))
-                        is_high_g = True
+                    if 'SurfaceGravity' in b:
+                        gravity = self.mpss_to_g(b['SurfaceGravity'])
+                        if gravity >= 1:
+                            flags.append("{}G".format(round(gravity)))
+                            is_high_g = True
 
                 if 'Rings' in b and len(b['Rings']) > 0:
                     has_ring = True
