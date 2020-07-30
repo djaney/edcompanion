@@ -3,8 +3,6 @@ from overlays import constants
 import pygame
 
 
-
-
 class BaseCard:
     def __init__(self, screen, journal, position=(0, 0), text_align='left', card_size=(1, 1)):
         self.screen = screen
@@ -16,7 +14,7 @@ class BaseCard:
         self.normal_font = pygame.font.Font(constants.FONT, 12)
 
         width, height = screen.get_size()
-        self.width, self.height = size = ((width // (3/self.card_size[0])), height // (3/self.card_size[1]))
+        self.width, self.height = size = ((width // (3 / self.card_size[0])), height // (3 / self.card_size[1]))
 
         self.surface = pygame.Surface(size, pygame.SRCALPHA)
         self.surface.fill((0, 0, 0, 0))
@@ -25,9 +23,10 @@ class BaseCard:
     def mpss_to_g(mpss):
         return mpss / 9.80665
 
-
-    def print_line(self, screen, font, text, x=0, y=0):
-        name_text = font.render(text, True, constants.COCKPIT_COLOR)
+    def print_line(self, screen, font, text, x=0, y=0, color=None):
+        if color is None:
+            color = constants.COLOR_COCKPIT
+        name_text = font.render(text, True, color)
         name_rect = name_text.get_rect()
         if self.text_align == 'left':
             name_rect.left = x
@@ -59,7 +58,7 @@ class ExplorationCard(BaseCard):
 
     @staticmethod
     def watched():
-        return ['Scan' ,'FSSSignalDiscovered']
+        return ['Scan', 'FSSSignalDiscovered']
 
     def print_discovery_count(self, screen, font, data_dict, columns=1, y=0, x=0):
         last_rect = None
@@ -81,10 +80,10 @@ class ExplorationCard(BaseCard):
                 y = (i // columns) * line_height + line_y
             if count is not None:
                 item_text = font.render("{}: {}".format(item_name, count), True,
-                                        constants.COCKPIT_COLOR)
+                                        constants.COLOR_COCKPIT)
             else:
                 item_text = font.render("{}".format(item_name), True,
-                                        constants.COCKPIT_COLOR)
+                                        constants.COLOR_COCKPIT)
             items_rect = item_text.get_rect()
             if self.text_align == 'left':
                 items_rect.left = x
@@ -129,7 +128,7 @@ class ExplorationCard(BaseCard):
                                x=constants.MARGIN)
 
         for i, f in enumerate(self.first_discoveries):
-            if rect.top > self.height - rect.height*3:
+            if rect.top > self.height - rect.height * 3:
                 rect = self.print_line(self.surface, self.normal_font,
                                        "{} more...".format(len(self.first_discoveries) - i), y=rect.bottom,
                                        x=constants.MARGIN)
@@ -141,9 +140,10 @@ class ExplorationCard(BaseCard):
 
 
 class CurrentSystemCard(BaseCard):
-
     bodies = OrderedDict()
     current_system = ''
+
+    HIGH_GRAVITY_THREASHOLD = 1
 
     @staticmethod
     def watched():
@@ -174,6 +174,10 @@ class CurrentSystemCard(BaseCard):
                 is_high_g = False
                 is_landable = False
                 has_ring = False
+                is_terraformable = False
+                is_star = False
+                is_scoopable = False
+                is_interesting_star_type = False
                 if b['BodyName'][0:len(b['StarSystem'])] == b['StarSystem']:
                     item_label = b['BodyName'][len(b['StarSystem']):]
                 else:
@@ -183,6 +187,17 @@ class CurrentSystemCard(BaseCard):
                     item_label = "{} ({})".format(item_label, b['PlanetClass'])
 
                 if 'StarType' in b and b['StarType'] != '':
+                    is_star = True
+
+                    is_interesting_star_type = True if b['StarType'].upper() in [
+                        'H', 'N', 'X', 'TTS', 'AEBE',
+                        'SUPERMASSIVEBLACKHOLE', 'ROGUEPLANET'
+                    ] else False
+
+                    is_scoopable = True if b['StarType'].upper() in [
+                        'K', 'B', 'G', 'F', 'O', 'A', 'M'
+                    ] else False
+
                     if 'Subclass' in b and b['Subclass'] != '':
                         item_label = "{} ({}{})".format(item_label, b['StarType'], b['Subclass'])
                     else:
@@ -191,13 +206,14 @@ class CurrentSystemCard(BaseCard):
                 flags = []
                 if 'TerraformState' in b and b['TerraformState'] != '':
                     flags.append('T')
+                    is_terraformable = True
 
                 if 'Landable' in b and b['Landable'] != '':
                     flags.append('L')
                     is_landable = True
                     if 'SurfaceGravity' in b:
                         gravity = self.mpss_to_g(b['SurfaceGravity'])
-                        if gravity >= 1:
+                        if gravity >= self.HIGH_GRAVITY_THREASHOLD:
                             flags.append("{}G".format(round(gravity)))
                             is_high_g = True
 
@@ -211,6 +227,23 @@ class CurrentSystemCard(BaseCard):
                 if len(flags) > 0:
                     item_label = "{} ({})".format(item_label, "".join(flags))
 
-                rect = self.print_line(self.surface, self.normal_font, item_label, x=constants.MARGIN, y=rect.bottom)
+                if is_terraformable:
+                    color = constants.COLOR_TERRAFORMABLE
+                elif is_star and not is_scoopable:
+                    color = constants.COLOR_DANGER
+                elif is_high_g and is_landable:
+                    color = constants.COLOR_DANGER
+                elif has_ring and is_landable:
+                    color = constants.COLOR_INTERESTING
+                elif has_ring and is_star:
+                    color = constants.COLOR_INTERESTING
+                elif is_interesting_star_type:
+                    color = constants.COLOR_INTERESTING
+
+                else:
+                    color = None
+
+                rect = self.print_line(self.surface, self.normal_font, item_label, x=constants.MARGIN, y=rect.bottom,
+                                       color=color)
 
         self.screen.blit(self.surface, self.get_blit_position())
