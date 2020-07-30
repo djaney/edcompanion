@@ -1,6 +1,7 @@
 from collections import OrderedDict
 from overlays import constants
 import pygame
+import math
 
 
 class BaseCard:
@@ -144,10 +145,51 @@ class CurrentSystemCard(BaseCard):
     current_system = ''
 
     HIGH_GRAVITY_THREASHOLD = 1
+    PARENT_SIZE_IN_VIEW_THREASHOLD = 10
 
     @staticmethod
     def watched():
         return ['Scan', 'FSDJump']
+
+    @staticmethod
+    def get_orbital_radius(b):
+        # get orbital radius
+        if 'Eccentricity' in b and 'SemiMajorAxis' in b:
+            orbit_major = b['SemiMajorAxis']
+            orbit_minor = orbit_major * math.sqrt(1 - (b['Eccentricity'] ** 2))
+            return (orbit_major + orbit_minor) / 2
+        else:
+            return None
+
+    def calculate_parent_percent_in_picture_plane(self):
+        for i, (body_id, body) in enumerate(self.bodies.items()):
+            if 'ParentSizeInPicturePlane' in body:
+                continue
+            if 'OrbitalRadius' not in body:
+                continue
+            if 'Parents' not in body:
+                continue
+
+            parent_id = None
+            for _, id in body['Parents'][0].items():
+                if id == 0:
+                    continue
+                parent_id = str(id)
+
+            if parent_id not in self.bodies.keys():
+                continue
+
+            parent = self.bodies[parent_id]
+
+            if 'Radius' not in parent:
+                continue
+            if 'Radius' not in body:
+                continue
+
+            parent_diameter = parent['Radius'] * 2
+            distance_to_parent = body['OrbitalRadius'] - body['Radius']
+            picture_plane_size = math.tan(45) * distance_to_parent * 2
+            self.bodies[body_id]['ParentSizeInPicturePlane'] = parent_diameter / picture_plane_size * 100
 
     def render(self):
 
@@ -157,13 +199,23 @@ class CurrentSystemCard(BaseCard):
                 self.bodies = OrderedDict()
                 self.current_system = e['StarSystem']
             elif e['event'] == 'Scan' and 'BodyID' in e:
-                if str(e['BodyID']) in self.bodies:
-                    self.bodies[str(e['BodyID'])].update(e)
+                body_id = str(e['BodyID'])
+                if body_id in self.bodies:
+                    self.bodies[body_id].update(e)
                 else:
-                    self.bodies[str(e['BodyID'])] = e
+                    self.bodies[body_id] = e
+
+                if 'OrbitalRadius' not in self.bodies[body_id]:
+                    orbital_radius = self.get_orbital_radius(self.bodies[body_id])
+                    if orbital_radius is not None:
+                        self.bodies[body_id]['OrbitalRadius'] = orbital_radius
+
+                self.calculate_parent_percent_in_picture_plane()
+
 
         rect = self.print_line(self.surface, self.h1_font, self.current_system, x=constants.MARGIN)
 
+        # printing
         for i, (k, b) in enumerate(self.bodies.items()):
             if rect.top > self.height - rect.height * 3:
                 rect = self.print_line(self.surface, self.normal_font,
@@ -178,12 +230,15 @@ class CurrentSystemCard(BaseCard):
                 is_star = False
                 is_scoopable = False
                 is_interesting_star_type = False
+                is_planet = False
+                is_parent_close_for_photo = False
                 if b['BodyName'][0:len(b['StarSystem'])] == b['StarSystem']:
                     item_label = b['BodyName'][len(b['StarSystem']):]
                 else:
                     item_label = b['BodyName']
 
                 if 'PlanetClass' in b and b['PlanetClass'] != '':
+                    is_planet = True
                     item_label = "{} ({})".format(item_label, b['PlanetClass'])
 
                 if 'StarType' in b and b['StarType'] != '':
@@ -224,24 +279,37 @@ class CurrentSystemCard(BaseCard):
                         ring_size += r['OuterRad'] - r['InnerRad']
                     flags.append('R{}'.format(round(ring_size)))
 
+                if 'ParentSizeInPicturePlane' in b and b['ParentSizeInPicturePlane'] >= self.PARENT_SIZE_IN_VIEW_THREASHOLD:
+                    is_parent_close_for_photo = False
+
                 if len(flags) > 0:
                     item_label = "{} ({})".format(item_label, "".join(flags))
 
+                interest_level = 0
+
+                color = None
+
                 if is_terraformable:
                     color = constants.COLOR_TERRAFORMABLE
-                elif is_star and not is_scoopable:
-                    color = constants.COLOR_DANGER
                 elif is_high_g and is_landable:
                     color = constants.COLOR_DANGER
-                elif has_ring and is_landable:
-                    color = constants.COLOR_INTERESTING
-                elif has_ring and is_star:
-                    color = constants.COLOR_INTERESTING
-                elif is_interesting_star_type:
-                    color = constants.COLOR_INTERESTING
 
-                else:
-                    color = None
+                if has_ring and is_landable:
+                    interest_level += 1
+                if has_ring and is_star:
+                    interest_level += 1
+                if is_interesting_star_type:
+                    interest_level += 1
+                if is_parent_close_for_photo:
+                    interest_level += 1
+
+                if color is None:
+                    if interest_level == 1:
+                        color = constants.COLOR_INTERESTING_1
+                    elif interest_level == 2:
+                        color = constants.COLOR_INTERESTING_2
+                    elif interest_level >= 3:
+                        color = constants.COLOR_INTERESTING_3
 
                 rect = self.print_line(self.surface, self.normal_font, item_label, x=constants.MARGIN, y=rect.bottom,
                                        color=color)
