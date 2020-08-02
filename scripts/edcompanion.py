@@ -22,12 +22,13 @@ def main():
         default_dir = None
 
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
-    parser.add_argument('--time', '-t', type=str, choices=['now', 'all', 'today'], default='today',
+    parser.add_argument('activity', type=str, choices=['exploration'], default='exploration')
+    parser.add_argument('--time', '-t', type=str, choices=['now', 'all', 'today'], default='now',
                         help='timestamp to start watching the journal')
     parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
-    parser.add_argument('--activity', '-a', type=str, choices=['exploration'], default='exploration')
+
 
     args = parser.parse_args()
 
@@ -78,6 +79,8 @@ def main():
         raise NotImplementedError("{} not implemented".format(args.activity))
 
     journal.watch = list(set(watch_list))
+
+    win.screen.fill(win.mask_color)
 
     while win.loop():
         if journal.has_new(last_update=last_update):

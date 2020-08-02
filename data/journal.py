@@ -33,10 +33,9 @@ class JournalWatcher:
         pattern_latest = re.compile('Journal\.{}\.\d+\.log'.format(max_timestamp))
         return sorted(filter(lambda s: pattern_latest.match(s), journal_files))
 
-    def __journal_event_generator(self):
-        latest_journal_files = self.__get_journal_files()
+    def __journal_event_generator(self, files):
 
-        for filename in latest_journal_files:
+        for filename in files:
             full_path = os.path.join(self.directory, filename)
             file_stat = os.stat(os.path.join(self.directory, full_path))
             # if self.last_update is not None and file_stat.st_mtime < self.last_update:
@@ -54,8 +53,8 @@ class JournalWatcher:
     def __parse_timestamp(self, timestamp_string):
         return datetime.strptime(timestamp_string, '%Y-%m-%dT%H:%M:%SZ')
 
-    def __extract(self, **kwargs):
-        for e in self.__journal_event_generator(**kwargs):
+    def __extract(self, *args, **kwargs):
+        for e in self.__journal_event_generator(*args, **kwargs):
             ts = self.__parse_timestamp(e['timestamp'])
             if self.last_timestamp is not None and ts <= self.last_timestamp:
                 continue
@@ -77,7 +76,7 @@ class JournalWatcher:
         if len(files) > 0:
             last_file_stat = os.stat(os.path.join(self.directory, files[-1]))
             if self.last_update is None or last_file_stat.st_mtime > self.last_update:
-                self.__extract()
+                self.__extract(files[-1:])
                 self.last_update = last_file_stat.st_mtime
                 is_modified = True
 

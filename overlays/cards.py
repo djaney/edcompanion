@@ -197,11 +197,12 @@ class CurrentSystemCard(BaseCard):
     def render(self):
         self.clear()
         for e in self.journal.events:
+            if e['event'] == 'Scan' and 'BodyID' in e:
 
-            if e['event'] == 'FSDJump':
-                self.bodies = OrderedDict()
-                self.current_system = e['StarSystem']
-            elif e['event'] == 'Scan' and 'BodyID' in e:
+                if 'StarSystem' in e and e['StarSystem'] != self.current_system:
+                    self.bodies = OrderedDict()
+                    self.current_system = e['StarSystem']
+
                 body_id = str(e['BodyID'])
                 if body_id in self.bodies:
                     self.bodies[body_id].update(e)
