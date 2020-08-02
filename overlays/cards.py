@@ -266,7 +266,7 @@ class CurrentSystemCard(BaseCard):
                     flags.append('T')
                     is_terraformable = True
 
-                if 'Landable' in b and b['Landable'] != '':
+                if 'Landable' in b and b['Landable']:
                     flags.append('L')
                     is_landable = True
                     if 'SurfaceGravity' in b:
