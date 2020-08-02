@@ -7,8 +7,12 @@ from datetime import datetime
 class JournalWatcher:
     def __init__(self, directory=None, watch=None):
         self.directory = directory
+        # track file last update
         self.last_update = None
-        self.last_timestamp = None
+        # last line in file
+        self.last_line = None
+        # last filename
+        self.last_filename = None
         self.__events = []
 
         if watch is None:
@@ -36,31 +40,42 @@ class JournalWatcher:
     def __journal_event_generator(self, files):
 
         for filename in files:
+
+            if self.last_filename != filename:
+                self.last_filename = filename
+                self.last_line = 0
+
             full_path = os.path.join(self.directory, filename)
             file_stat = os.stat(os.path.join(self.directory, full_path))
             # if self.last_update is not None and file_stat.st_mtime < self.last_update:
             #     continue
+
             with open(full_path, 'r') as fp:
-                line = fp.readline()
-                while line:
+                current_file_line = 0
+                while True:
+                    line = fp.readline()
+                    current_file_line += 1
+
+                    if self.last_line > current_file_line:
+                        continue
+
+                    if not line:
+                        break
+
                     try:
                         decoded = json.loads(line)
                         yield decoded
                     except json.decoder.JSONDecodeError:
                         pass
-                    line = fp.readline()
+
+                self.last_line = current_file_line
 
     def __parse_timestamp(self, timestamp_string):
         return datetime.strptime(timestamp_string, '%Y-%m-%dT%H:%M:%SZ')
 
     def __extract(self, *args, **kwargs):
         for e in self.__journal_event_generator(*args, **kwargs):
-            ts = self.__parse_timestamp(e['timestamp'])
-            if self.last_timestamp is not None and ts <= self.last_timestamp:
-                continue
-            self.last_timestamp = ts
             event_name = e['event']
-
             # record events
             if event_name in self.watch:
                 self.__events.append(e)
