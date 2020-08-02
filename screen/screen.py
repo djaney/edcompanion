@@ -8,10 +8,12 @@ class Window(object):
         self.mask_color = 0, 255, 0
         self.fps = 60
         self.clock = pygame.time.Clock()
+
         pygame.init()
+        pygame.display.set_caption("Elite: Dangerous Overlay")
 
         if size is None:
-            size = (0,0)
+            size = (0, 0)
 
         self.screen = pygame.display.set_mode(size)
         self.screen.fill(self.mask_color)

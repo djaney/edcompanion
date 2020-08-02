@@ -18,6 +18,9 @@ class BaseCard:
         self.width, self.height = size = ((width // (3 / self.card_size[0])), height // (3 / self.card_size[1]))
 
         self.surface = pygame.Surface(size, pygame.SRCALPHA)
+        self.clear()
+
+    def clear(self):
         self.surface.fill((0, 0, 0, 0))
 
     @staticmethod
@@ -98,7 +101,7 @@ class ExplorationCard(BaseCard):
         return last_rect
 
     def render(self):
-
+        self.clear()
         for e in self.journal.events:
             if e['event'] == 'Scan' and 'PlanetClass' in e:
                 n = e['PlanetClass']
@@ -192,7 +195,7 @@ class CurrentSystemCard(BaseCard):
             self.bodies[body_id]['ParentSizeInPicturePlane'] = parent_diameter / picture_plane_size * 100
 
     def render(self):
-
+        self.clear()
         for e in self.journal.events:
 
             if e['event'] == 'FSDJump':
