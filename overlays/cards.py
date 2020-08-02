@@ -280,7 +280,7 @@ class CurrentSystemCard(BaseCard):
                     ring_size = 0
                     for r in b['Rings']:
                         ring_size += r['OuterRad'] - r['InnerRad']
-                    flags.append('R{}'.format(round(ring_size)))
+                    flags.append('R')
 
                 if 'ParentSizeInPicturePlane' in b and b['ParentSizeInPicturePlane'] >= self.PARENT_SIZE_IN_VIEW_THREASHOLD:
                     is_parent_close_for_photo = False
