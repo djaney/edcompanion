@@ -1,9 +1,9 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='edoverlay',
+    name='edcompanion',
     version='0.1.0',
-    url='https://github.com/mypackage.git',
+    url='https://github.com/djaney/edcompanion',
     author='Djane Rey Mabelin',
     author_email='thedjaney@gmail.com',
     description='Creates a streaming overlay for Elite: Dangerous',
@@ -14,7 +14,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'edoverlay=scripts.edoverlay:main',
+            'edcompanion=scripts.edcompanion:main',
         ]
     },
     package_data={
