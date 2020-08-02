@@ -10,7 +10,7 @@ class Window(object):
         self.clock = pygame.time.Clock()
 
         pygame.init()
-        pygame.display.set_caption("Elite: Dangerous Overlay")
+        pygame.display.set_caption("Elite: Dangerous Companion")
 
         if size is None:
             size = (0, 0)
