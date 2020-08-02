@@ -24,7 +24,7 @@ def main():
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
     parser.add_argument('--time', '-t', type=str, choices=['now', 'all', 'today'], default='today',
                         help='timestamp to start watching the journal')
-    parser.add_argument('--background', '-b', type=str, default='', help='background color name (ex. black)')
+    parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
     parser.add_argument('--activity', '-a', type=str, choices=['exploration'], default='exploration')
