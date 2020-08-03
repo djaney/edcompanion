@@ -62,7 +62,7 @@ class ExplorationCard(BaseCard):
 
     @staticmethod
     def watched():
-        return ['Scan', 'FSSSignalDiscovered']
+        return ['Scan']
 
     def print_discovery_count(self, screen, font, data_dict, columns=1, y=0, x=0):
         last_rect = None
