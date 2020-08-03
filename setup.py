@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='edcompanion',
-    version='0.1.2',
+    version='0.1.3',
     url='https://github.com/djaney/edcompanion',
     author='Djane Rey Mabelin',
     author_email='thedjaney@gmail.com',

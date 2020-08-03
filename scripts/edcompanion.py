@@ -23,21 +23,12 @@ def main():
 
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
     parser.add_argument('activity', type=str, choices=['exploration'], default='exploration')
-    parser.add_argument('--time', '-t', type=str, choices=['now', 'all', 'today'], default='today',
-                        help='timestamp to start watching the journal')
     parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
 
 
     args = parser.parse_args()
-
-    if args.time == 'now':
-        last_update = datetime.now().timestamp()
-    elif args.time == 'today':
-        last_update = datetime.now().replace(hour=0, minute=0).timestamp()
-    else:
-        last_update = None
 
     journal_path = args.dir
 
@@ -83,7 +74,7 @@ def main():
     win.screen.fill(win.mask_color)
 
     while win.loop():
-        if journal.has_new(last_update=last_update):
+        if journal.has_new():
             win.screen.fill(win.mask_color)
             for card in card_list:
                 card.render()
