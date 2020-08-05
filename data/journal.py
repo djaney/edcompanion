@@ -93,6 +93,21 @@ class JournalWatcher:
 
         return is_modified
 
+    def get_route(self):
+        path = os.path.join(self.directory, 'NavRoute.json')
+
+        if not os.path.isfile(path):
+            return None
+
+        route = None
+        with open(path, 'r') as file:
+            route = json.load(file)
+
+        if 'Route' not in route:
+            return None
+
+        return route['Route']
+
     @property
     def events(self):
         return self.__events

@@ -27,7 +27,6 @@ def main():
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
 
-
     args = parser.parse_args()
 
     journal_path = args.dir
@@ -64,6 +63,10 @@ def main():
         card_list.append(card)
         # current system card
         card = cards.CurrentSystemCard(win.screen, journal, position=(2, 1), text_align='right', card_size=(1, 2))
+        watch_list += card.watched()
+        card_list.append(card)
+        # route card
+        card = cards.RouteCard(win.screen, journal, position=(0, 0), text_align='left', card_size=(3, 1))
         watch_list += card.watched()
         card_list.append(card)
     else:
