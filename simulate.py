@@ -73,7 +73,7 @@ class Simulator:
                 'StarSystem': system_name,
                 'SystemAddress': self.get_system_address(i),
                 'StarPos': self.get_star_pos(i),
-                'StarClass': 'K',
+                'StarClass': random.choice('KBGFOAMTBH'),
             })
 
         with open('.tmp/NavRoute.json', 'w') as file:

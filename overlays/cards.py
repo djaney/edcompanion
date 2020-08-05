@@ -362,22 +362,28 @@ class RouteCard(BaseCard):
             radius = 20
             x = distance + (list_index * distance)
             y = height // 4
+
+            if stop['StarClass'] not in 'KBGFOAM':
+                color = constants.COLOR_DANGER
+            else:
+                color = constants.COLOR_COCKPIT
+
             if position_index == self.position_in_route:
                 pygame.draw.circle(
                     self.surface,
-                    constants.COLOR_COCKPIT,
+                    color,
                     (x, y),
                     radius
                 )
             else:
                 pygame.draw.circle(
                     self.surface,
-                    constants.COLOR_COCKPIT,
+                    color,
                     (x, y),
                     radius,
                     1
                 )
-                dot_label = self.normal_font.render(str(position_index+1), True, constants.COLOR_COCKPIT)
+                dot_label = self.normal_font.render(str(position_index+1), True, color)
                 dot_label_rect = dot_label.get_rect()
                 dot_label_rect.center = (x, y)
                 self.surface.blit(dot_label, dot_label_rect)
