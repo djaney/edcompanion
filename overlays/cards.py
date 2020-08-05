@@ -319,3 +319,76 @@ class CurrentSystemCard(BaseCard):
                                        color=color)
 
         self.screen.blit(self.surface, self.get_blit_position())
+
+
+class RouteCard(BaseCard):
+    route = None
+    current_address = None
+    position_in_route = -1
+    @staticmethod
+    def watched():
+        return ['NavRoute', 'FSDJump']
+
+    def render(self):
+        self.clear()
+
+        for e in self.journal.events:
+            if e['event'] == 'NavRoute':
+                self.route = self.journal.get_route()
+            elif e['event'] == 'FSDJump':
+                self.current_address = e['SystemAddress']
+
+            if 'SystemAddress' in e:
+                self.position_in_route = -1
+                for route_pos, r in enumerate(self.route):
+                    if r['SystemAddress'] == self.current_address:
+                        self.position_in_route = route_pos
+                        break
+
+        route_slice = list(enumerate(self.route))
+        pad = 5
+        if self.position_in_route < pad:
+            route_slice = route_slice[:10]
+        elif self.position_in_route >= len(route_slice)-pad:
+            route_slice = route_slice[10:]
+        else:
+            route_slice = route_slice[self.position_in_route-pad:self.position_in_route+pad]
+
+        width = self.surface.get_width()
+        height = self.surface.get_height()
+        distance = width // (len(route_slice) + 1)
+
+        for list_index, (position_index, stop) in enumerate(route_slice):
+            radius = 20
+            x = distance + (list_index * distance)
+            y = height // 4
+
+            if stop['StarClass'] not in 'KBGFOAM':
+                color = constants.COLOR_DANGER
+            else:
+                color = constants.COLOR_COCKPIT
+
+            if position_index == self.position_in_route:
+                pygame.draw.circle(
+                    self.surface,
+                    color,
+                    (x, y),
+                    radius
+                )
+            else:
+                pygame.draw.circle(
+                    self.surface,
+                    color,
+                    (x, y),
+                    radius,
+                    1
+                )
+                dot_label = self.normal_font.render(str(position_index+1), True, color)
+                dot_label_rect = dot_label.get_rect()
+                dot_label_rect.center = (x, y)
+                self.surface.blit(dot_label, dot_label_rect)
+
+            if list_index < len(route_slice)-1:
+                pygame.draw.line(self.surface, constants.COLOR_COCKPIT, (x+radius, y), (x+distance-radius, y))
+
+        self.screen.blit(self.surface, self.get_blit_position())
