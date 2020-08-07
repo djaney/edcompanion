@@ -10,6 +10,9 @@ class Window(object):
         self.fps = 60
         self.clock = pygame.time.Clock()
 
+        if is_overlay and os.name == 'nt':
+            os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
+        
         pygame.init()
         pygame.display.set_caption("Elite: Dangerous Companion")
 
