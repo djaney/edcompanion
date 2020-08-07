@@ -13,7 +13,7 @@ setup(
         'pygame>=1.9,<2'
     ],
     entry_points={
-        'console_scripts': [
+        'gui_scripts': [
             'edcompanion=scripts.edcompanion:main',
         ]
     },
