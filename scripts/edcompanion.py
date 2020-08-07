@@ -46,10 +46,9 @@ def main():
         else:
             size = None
 
-    win = Window(size=size, is_overlay=args.overlay)
-
-    if args.background != '':
-        win.mask_color = pygame.Color(args.background)
+    
+  
+   win = Window(size=size, is_overlay=args.overlay, color=pygame.Color(args.background)) 
 
     watch_list = []
     card_list = []
