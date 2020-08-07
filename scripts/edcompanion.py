@@ -48,7 +48,7 @@ def main():
 
     
   
-   win = Window(size=size, is_overlay=args.overlay, color=pygame.Color(args.background)) 
+    win = Window(size=size, is_overlay=args.overlay, color=pygame.Color(args.background)) 
 
     watch_list = []
     card_list = []
