@@ -216,7 +216,6 @@ class CurrentSystemCard(BaseCard):
 
                 self.calculate_parent_percent_in_picture_plane()
 
-
         rect = self.print_line(self.surface, self.h1_font, self.current_system, x=constants.MARGIN)
 
         # printing
@@ -235,6 +234,7 @@ class CurrentSystemCard(BaseCard):
                 is_scoopable = False
                 is_interesting_star_type = False
                 is_planet = False
+                is_expensive = False
                 is_parent_close_for_photo = False
                 if b['BodyName'][0:len(b['StarSystem'])] == b['StarSystem']:
                     item_label = b['BodyName'][len(b['StarSystem']):]
@@ -244,6 +244,11 @@ class CurrentSystemCard(BaseCard):
                 if 'PlanetClass' in b and b['PlanetClass'] != '':
                     is_planet = True
                     item_label = "{} ({})".format(item_label, b['PlanetClass'])
+                    class_lower = b['PlanetClass'].lower()
+                    if class_lower.find('earth') >= 0 or \
+                            class_lower.find('water world') >= 0 or \
+                            class_lower.find('ammonia world') >= 0:
+                        is_expensive = True
 
                 if 'StarType' in b and b['StarType'] != '':
                     is_star = True
@@ -283,7 +288,8 @@ class CurrentSystemCard(BaseCard):
                         ring_size += r['OuterRad'] - r['InnerRad']
                     flags.append('R')
 
-                if 'ParentSizeInPicturePlane' in b and b['ParentSizeInPicturePlane'] >= self.PARENT_SIZE_IN_VIEW_THREASHOLD:
+                if 'ParentSizeInPicturePlane' in b and b[
+                    'ParentSizeInPicturePlane'] >= self.PARENT_SIZE_IN_VIEW_THREASHOLD:
                     is_parent_close_for_photo = False
 
                 if len(flags) > 0:
@@ -293,27 +299,22 @@ class CurrentSystemCard(BaseCard):
 
                 color = None
 
-                if is_terraformable:
+                if is_terraformable or is_expensive:
                     color = constants.COLOR_TERRAFORMABLE
                 elif is_high_g and is_landable:
                     color = constants.COLOR_DANGER
+                else:
 
-                if has_ring and is_landable:
-                    interest_level += 1
-                if has_ring and is_star:
-                    interest_level += 1
-                if is_interesting_star_type:
-                    interest_level += 1
-                if is_parent_close_for_photo:
-                    interest_level += 1
+                    if has_ring and is_landable:
+                        interest_level += 1
+                    if is_interesting_star_type:
+                        interest_level += 1
+                    if is_parent_close_for_photo:
+                        interest_level += 1
 
-                if color is None:
-                    if interest_level == 1:
-                        color = constants.COLOR_INTERESTING_1
-                    elif interest_level == 2:
-                        color = constants.COLOR_INTERESTING_2
-                    elif interest_level >= 3:
-                        color = constants.COLOR_INTERESTING_3
+
+                item_label += "*" * interest_level
+
 
                 rect = self.print_line(self.surface, self.normal_font, item_label, x=constants.MARGIN, y=rect.bottom,
                                        color=color)
@@ -325,6 +326,7 @@ class RouteCard(BaseCard):
     route = None
     current_address = None
     position_in_route = -1
+
     @staticmethod
     def watched():
         return ['NavRoute', 'FSDJump']
@@ -349,10 +351,10 @@ class RouteCard(BaseCard):
         pad = 5
         if self.position_in_route < pad:
             route_slice = route_slice[:10]
-        elif self.position_in_route >= len(route_slice)-pad:
+        elif self.position_in_route >= len(route_slice) - pad:
             route_slice = route_slice[10:]
         else:
-            route_slice = route_slice[self.position_in_route-pad:self.position_in_route+pad]
+            route_slice = route_slice[self.position_in_route - pad:self.position_in_route + pad]
 
         width = self.surface.get_width()
         height = self.surface.get_height()
@@ -383,12 +385,14 @@ class RouteCard(BaseCard):
                     radius,
                     1
                 )
-                dot_label = self.normal_font.render(str(position_index+1), True, color)
+                dot_label = self.normal_font.render(str(len(self.route) - position_index), True, color)
                 dot_label_rect = dot_label.get_rect()
                 dot_label_rect.center = (x, y)
                 self.surface.blit(dot_label, dot_label_rect)
 
-            if list_index < len(route_slice)-1:
-                pygame.draw.line(self.surface, constants.COLOR_COCKPIT, (x+radius, y), (x+distance-radius, y))
+            if list_index < len(route_slice) - 1:
+                pygame.draw.line(self.surface, constants.COLOR_COCKPIT, (x + radius, y), (x + distance - radius, y))
 
         self.screen.blit(self.surface, self.get_blit_position())
+
+

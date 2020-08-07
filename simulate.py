@@ -38,6 +38,8 @@ class Simulator:
                       landable=False,
                       discovered=True,
                       mapped=True,
+                      star_type=None,
+                      planet_class=None,
                       distance_index=1):
         obj = OrderedDict({
             "timestamp": self.get_timestamp(),
@@ -53,10 +55,13 @@ class Simulator:
             "WasMapped": mapped,
             "TidalLock": False,
             "TerraformState": terraform_state,
-            "PlanetClass": "Icy body",
             "Atmosphere": "",
             "Landable": landable
         })
+        if star_type is not None:
+            obj['StarType'] = star_type
+        if planet_class is not None:
+            obj['PlanetClass'] = planet_class
         return json.dumps(obj)
 
     def write_route(self, start):
@@ -67,7 +72,7 @@ class Simulator:
             'Route': []
         }
 
-        for i in range(start, start+20):
+        for i in range(start, start+random.randint(3,30)):
             system_name = self.get_system_name(i)
             route_dict['Route'].append({
                 'StarSystem': system_name,
@@ -83,6 +88,8 @@ class Simulator:
             return json.dumps({"timestamp": self.get_timestamp(), "event": "NavRoute"})
 
         self.write((route_event, {}))
+
+        return route_dict
 
     def write(self, event):
         func, kwargs = event
@@ -125,14 +132,7 @@ class Simulator:
                            "FuelUsed": 10, "FuelLevel": 50})
 
     def simulate(self):
-        system_events = [
-            (self.gen_scan_body, {'body': 'A'}),
-            (self.gen_scan_body, {'body': 'A1', 'terraform_state': 'Terraformable'}),
-            (self.gen_scan_body, {'body': 'A2', 'landable': True}),
-            (self.gen_scan_body, {'body': 'A3'}),
-            (self.gen_scan_body, {'body': 'A4', 'discovered': False}),
-            (self.gen_scan_body, {'body': 'A5', 'mapped': False}),
-        ]
+
 
         # clear temporary journal
         files = glob.glob('.tmp/*')
@@ -146,20 +146,33 @@ class Simulator:
 
         # each loop iteration is one star system
         system_index = 1
-        self.write_route(system_index)
-        while True:
 
-            # write system events
-            for body_index, (func, args) in enumerate(system_events):
-                star_system = self.get_system_name(system_index)
-                args.update({
-                    'star_system': star_system,
-                    'body_id': str(body_index + 1),
-                    'distance_index': body_index
-                })
-                self.write((func, args))
-            system_index += 1
-            self.write((self.get_fsd_jump, {'index': system_index}))
+        while True:
+            # generate route
+            route = self.write_route(system_index)
+            for r in route['Route']:
+                # generate system for each route
+                system_events = [
+                    (self.gen_scan_body, {'body': 'A', 'star_type': r['StarClass']}),
+                    (
+                    self.gen_scan_body, {'body': 'A1', 'terraform_state': 'Terraformable', 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body': 'A2', 'landable': True, 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body': 'A3', 'planet_class': 'Earth-like world'}),
+                    (self.gen_scan_body, {'body': 'A4', 'discovered': False, 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body': 'A5', 'mapped': False, 'planet_class': 'Icy Body'}),
+                ]
+                # write bodies
+                for body_index, (func, args) in enumerate(system_events):
+                    star_system = self.get_system_name(system_index)
+                    args.update({
+                        'star_system': star_system,
+                        'body_id': str(body_index + 1),
+                        'distance_index': body_index
+                    })
+                    self.write((func, args))
+                # jump to next
+                system_index += 1
+                self.write((self.get_fsd_jump, {'index': system_index}))
 
 
 if __name__ == "__main__":
