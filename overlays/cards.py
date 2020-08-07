@@ -76,6 +76,17 @@ class ExplorationCard(BaseCard):
         )
 
         # print
+        
+        if len(data_dict) == 0:
+            item_text = font.render("Go Explore!", False, constants.COLOR_COCKPIT)
+            items_rect = item_text.get_rect()
+            if self.text_align == 'left':
+                items_rect.left = x
+            else:
+                items_rect.right = self.width - x
+            items_rect.top = y
+            last_rect = items_rect
+                
         for i, (item_name, count) in enumerate(data_dict.items()):
             x = (i % columns) * (width // columns) + x
             if i < columns:
