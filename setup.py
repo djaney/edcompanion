@@ -1,4 +1,11 @@
 from setuptools import setup, find_packages
+import os
+
+requirements = [
+        'pygame>=1.9,<2',
+    ]
+if os.name == 'nt':
+    requirements.append('pywin32')
 
 setup(
     name='edcompanion',
@@ -9,9 +16,7 @@ setup(
     description='Creates a streaming overlay for Elite: Dangerous',
     python_requires=">=3.5",
     packages=find_packages(),
-    install_requires=[
-        'pygame>=1.9,<2'
-    ],
+    install_requires=requirements,
     entry_points={
         'console_scripts': [
             'edcompanion=scripts.edcompanion:main',

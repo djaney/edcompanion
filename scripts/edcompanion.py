@@ -26,12 +26,15 @@ def main():
     parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
+    parser.add_argument('--overlay', '-o', default=False, action='store_true', help="Overlay mode (windows only)")
 
     args = parser.parse_args()
 
     journal_path = args.dir
 
     print('Journal directory: {}'.format(journal_path))
+
+
     if args.size == '720p':
         size = (1280, 720)
     elif args.size == '1080p':
@@ -43,7 +46,7 @@ def main():
         else:
             size = None
 
-    win = Window(size=size)
+    win = Window(size=size, is_overlay=args.overlay)
 
     if args.background != '':
         win.mask_color = pygame.Color(args.background)
