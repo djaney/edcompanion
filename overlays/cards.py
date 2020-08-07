@@ -30,7 +30,7 @@ class BaseCard:
     def print_line(self, screen, font, text, x=0, y=0, color=None):
         if color is None:
             color = constants.COLOR_COCKPIT
-        name_text = font.render(text, True, color)
+        name_text = font.render(text, False, color)
         name_rect = name_text.get_rect()
         if self.text_align == 'left':
             name_rect.left = x
@@ -83,10 +83,10 @@ class ExplorationCard(BaseCard):
             else:
                 y = (i // columns) * line_height + line_y
             if count is not None:
-                item_text = font.render("{}: {}".format(item_name, count), True,
+                item_text = font.render("{}: {}".format(item_name, count), False,
                                         constants.COLOR_COCKPIT)
             else:
-                item_text = font.render("{}".format(item_name), True,
+                item_text = font.render("{}".format(item_name), False,
                                         constants.COLOR_COCKPIT)
             items_rect = item_text.get_rect()
             if self.text_align == 'left':
@@ -385,7 +385,7 @@ class RouteCard(BaseCard):
                     radius,
                     1
                 )
-                dot_label = self.normal_font.render(str(len(self.route) - position_index), True, color)
+                dot_label = self.normal_font.render(str(len(self.route) - position_index), False, color)
                 dot_label_rect = dot_label.get_rect()
                 dot_label_rect.center = (x, y)
                 self.surface.blit(dot_label, dot_label_rect)
