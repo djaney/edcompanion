@@ -5,8 +5,8 @@ import os
 
 
 class Window(object):
-    def __init__(self, size=None, is_overlay=False):
-        self.mask_color = 0, 255, 0
+    def __init__(self, size=None, is_overlay=False, color=(0, 255, 0)):
+        self.mask_color = color
         self.fps = 60
         self.clock = pygame.time.Clock()
 
