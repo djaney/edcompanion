@@ -27,6 +27,7 @@ class Window(object):
             self.screen = pygame.display.set_mode((0, 0), NOFRAME)
 
             hwnd = pygame.display.get_wm_info()["window"]
+            win32gui.SetWindowPos(hwnd, win32con.HWND_TOPMOST, 0, 0, self.width, self.height, 0) 
             win32gui.SetWindowLong(hwnd, win32con.GWL_EXSTYLE,
                                    win32gui.GetWindowLong(hwnd, win32con.GWL_EXSTYLE) | win32con.WS_EX_LAYERED)
             win32gui.SetLayeredWindowAttributes(hwnd, win32api.RGB(*self.mask_color), 0, win32con.LWA_COLORKEY)
