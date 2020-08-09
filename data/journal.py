@@ -104,7 +104,7 @@ class JournalWatcher:
             route = json.load(file)
 
         if 'Route' not in route:
-            return None
+            return []
 
         return route['Route']
 
