@@ -334,7 +334,7 @@ class CurrentSystemCard(BaseCard):
 
 
 class RouteCard(BaseCard):
-    route = None
+    route = []
     current_address = None
     position_in_route = -1
 
