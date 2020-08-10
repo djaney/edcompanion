@@ -72,7 +72,7 @@ class Simulator:
             'Route': []
         }
 
-        for i in range(start, start+random.randint(3,30)):
+        for i in range(start, start + random.randint(3, 30)):
             system_name = self.get_system_name(i)
             route_dict['Route'].append({
                 'StarSystem': system_name,
@@ -117,29 +117,27 @@ class Simulator:
         return index
 
     def get_star_pos(self, index):
-        return [500*index, 500*index, 500*index]
+        return [500 * index, 500 * index, 500 * index]
 
     def get_fsd_jump(self, index):
-        return json.dumps({"timestamp": self.get_timestamp(), "event": "FSDJump", "StarSystem": self.get_system_name(index),
-                           "SystemAddress": self.get_system_address(index), "StarPos": self.get_star_pos(index),
-                           "SystemAllegiance": "",
-                           "SystemEconomy": "$economy_None;", "SystemEconomy_Localised": "None",
-                           "SystemSecondEconomy": "$economy_None;", "SystemSecondEconomy_Localised": "None",
-                           "SystemGovernment": "$government_None;", "SystemGovernment_Localised": "None",
-                           "SystemSecurity": "$GAlAXY_MAP_INFO_state_anarchy;", "SystemSecurity_Localised": "Anarchy",
-                           "Population": 0, "Body": self.get_system_name(index) + " A", "BodyID": 1,
-                           "BodyType": "Star", "JumpDist": 54.522,
-                           "FuelUsed": 10, "FuelLevel": 50})
+        return json.dumps(
+            {"timestamp": self.get_timestamp(), "event": "FSDJump", "StarSystem": self.get_system_name(index),
+             "SystemAddress": self.get_system_address(index), "StarPos": self.get_star_pos(index),
+             "SystemAllegiance": "",
+             "SystemEconomy": "$economy_None;", "SystemEconomy_Localised": "None",
+             "SystemSecondEconomy": "$economy_None;", "SystemSecondEconomy_Localised": "None",
+             "SystemGovernment": "$government_None;", "SystemGovernment_Localised": "None",
+             "SystemSecurity": "$GAlAXY_MAP_INFO_state_anarchy;", "SystemSecurity_Localised": "Anarchy",
+             "Population": 0, "Body": self.get_system_name(index) + " A", "BodyID": 1,
+             "BodyType": "Star", "JumpDist": 54.522,
+             "FuelUsed": 10, "FuelLevel": 50})
 
     def simulate(self):
-
 
         # clear temporary journal
         files = glob.glob('.tmp/*')
         for f in files:
             os.remove(f)
-
-
 
         # write initial heading
         self.write((self.gen_file_header, {}))
@@ -153,20 +151,20 @@ class Simulator:
             for r in route['Route']:
                 # generate system for each route
                 system_events = [
-                    (self.gen_scan_body, {'body': 'A', 'star_type': r['StarClass']}),
-                    (
-                    self.gen_scan_body, {'body': 'A1', 'terraform_state': 'Terraformable', 'planet_class': 'Icy Body'}),
-                    (self.gen_scan_body, {'body': 'A2', 'landable': True, 'planet_class': 'Icy Body'}),
-                    (self.gen_scan_body, {'body': 'A3', 'planet_class': 'Earth-like world'}),
-                    (self.gen_scan_body, {'body': 'A4', 'discovered': False, 'planet_class': 'Icy Body'}),
-                    (self.gen_scan_body, {'body': 'A5', 'mapped': False, 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body_id': 6, 'body': 'A5', 'mapped': False, 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body_id': 1, 'body': 'A', 'star_type': r['StarClass']}),
+                    (self.gen_scan_body,
+                     {'body_id': 2, 'body': 'A1', 'terraform_state': 'Terraformable', 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body_id': 3, 'body': 'A2', 'landable': True, 'planet_class': 'Icy Body'}),
+                    (self.gen_scan_body, {'body_id': 4, 'body': 'A3', 'planet_class': 'Earth-like world'}),
+                    (self.gen_scan_body, {'body_id': 5, 'body': 'A4', 'discovered': False, 'planet_class': 'Icy Body'}),
                 ]
                 # write bodies
                 for body_index, (func, args) in enumerate(system_events):
                     star_system = self.get_system_name(system_index)
+
                     args.update({
                         'star_system': star_system,
-                        'body_id': str(body_index + 1),
                         'distance_index': body_index
                     })
                     self.write((func, args))
