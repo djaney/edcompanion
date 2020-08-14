@@ -5,6 +5,8 @@ import math
 
 
 class BaseCard:
+    __line_y = 0
+
     def __init__(self, screen, journal, position=(0, 0), text_align='left', card_size=(1, 1)):
         self.screen = screen
         self.journal = journal
@@ -22,22 +24,24 @@ class BaseCard:
 
     def clear(self):
         self.surface.fill((0, 0, 0, 0))
+        self.__line_y = 0
 
     @staticmethod
     def mpss_to_g(mpss):
         return mpss / 9.80665
 
-    def print_line(self, screen, font, text, x=0, y=0, color=None):
+    def print_line(self, screen, font, text, color=None):
         if color is None:
             color = constants.COLOR_COCKPIT
         name_text = font.render(text, False, color)
         name_rect = name_text.get_rect()
         if self.text_align == 'left':
-            name_rect.left = x
+            name_rect.left = constants.MARGIN
         else:
-            name_rect.right = self.width - x
-        name_rect.top = y
+            name_rect.right = self.width - constants.MARGIN
+        name_rect.top = self.__line_y
         screen.blit(name_text, name_rect)
+        self.__line_y = name_rect.bottom
         return name_rect
 
     def get_blit_position(self):
@@ -67,17 +71,12 @@ class BaseCard:
 
 class ExplorationCard(BaseCard):
     planets = {}
-    first_discoveries = []
 
     @staticmethod
     def watched():
         return ['Scan']
 
-    def print_discovery_count(self, screen, font, data_dict, columns=1, y=0, x=0):
-        last_rect = None
-        line_height = None
-        width, height = screen.get_size()
-        line_y = y
+    def print_discovery_count(self, screen, font, data_dict, y=0, x=0):
 
         # re-order
         data_dict = OrderedDict(
@@ -97,28 +96,11 @@ class ExplorationCard(BaseCard):
             last_rect = items_rect
 
         for i, (item_name, count) in enumerate(data_dict.items()):
-            x = (i % columns) * (width // columns) + x
-            if i < columns:
-                y = line_y
-            else:
-                y = (i // columns) * line_height + line_y
-            if count is not None:
-                item_text = font.render("{}: {}".format(item_name, count), False,
-                                        constants.COLOR_COCKPIT)
-            else:
-                item_text = font.render("{}".format(item_name), False,
-                                        constants.COLOR_COCKPIT)
-            items_rect = item_text.get_rect()
-            if self.text_align == 'left':
-                items_rect.left = x
-            else:
-                items_rect.right = self.width - x
-            items_rect.top = y
-            screen.blit(item_text, items_rect)
-            if line_height is None:
-                line_height = items_rect.height
-            last_rect = items_rect
-        return last_rect
+            self.print_line(self.surface,
+                            font,
+                            "{}: {}".format(item_name, count) if count is not None else "{}".format(item_name),
+
+                            )
 
     def perform_build_data(self):
         for e in self.journal.events:
@@ -138,28 +120,10 @@ class ExplorationCard(BaseCard):
                     self.planets[n] = 0
                 self.planets[n] += 1
 
-                # first discovery
-                if 'WasDiscovered' in e and not e['WasDiscovered']:
-                    n = e['BodyName']
-                    if n not in self.first_discoveries:
-                        self.first_discoveries.insert(0, n)
-
     def perform_draw(self):
         # scanned bodies
-        rect = self.print_line(self.surface, self.h1_font, 'Scanned Bodies', x=constants.MARGIN)
-        rect = self.print_discovery_count(self.surface, self.normal_font, self.planets, y=rect.bottom,
-                                          x=constants.MARGIN)
-        rect = self.print_line(self.surface, self.h1_font, 'First discoveries', y=rect.bottom + constants.MARGIN,
-                               x=constants.MARGIN)
-
-        for i, f in enumerate(self.first_discoveries):
-            if rect.top > self.height - rect.height * 3:
-                rect = self.print_line(self.surface, self.normal_font,
-                                       "{} more...".format(len(self.first_discoveries) - i), y=rect.bottom,
-                                       x=constants.MARGIN)
-                break
-            else:
-                rect = self.print_line(self.surface, self.normal_font, f, y=rect.bottom, x=constants.MARGIN)
+        self.print_line(self.surface, self.h1_font, 'Scanned Bodies')
+        self.print_discovery_count(self.surface, self.normal_font, self.planets)
 
 
 class CurrentSystemCard(BaseCard):
@@ -323,7 +287,7 @@ class CurrentSystemCard(BaseCard):
 
     def perform_draw(self):
 
-        rect = self.print_line(self.surface, self.h1_font, self.current_system, x=constants.MARGIN)
+        rect = self.print_line(self.surface, self.h1_font, self.current_system)
 
         # printing
         for i, (k, b) in enumerate(self.bodies.items()):
@@ -351,8 +315,7 @@ class CurrentSystemCard(BaseCard):
                 else:
                     color = constants.COLOR_COCKPIT
                 item_label = b['ItemLabel']
-                rect = self.print_line(self.surface, self.normal_font, item_label, x=constants.MARGIN, y=rect.bottom,
-                                       color=color)
+                rect = self.print_line(self.surface, self.normal_font, item_label, color=color)
 
 
 class RouteCard(BaseCard):

@@ -11,12 +11,11 @@ import os
 
 
 def main(*args):
-
     if platform.system().lower() == 'linux':
         default_dir = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
-                       'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER',''))
+                      'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER', ''))
     elif platform.system().lower() == 'windows':
-        default_dir = '{}\\Saved Games\\Frontier Developments\\Elite Dangerous'\
+        default_dir = '{}\\Saved Games\\Frontier Developments\\Elite Dangerous' \
             .format(os.environ.get('USERPROFILE', ''))
     else:
         default_dir = None
@@ -37,7 +36,6 @@ def main(*args):
 
     print('Journal directory: {}'.format(journal_path))
 
-
     if args.size == '720p':
         size = (1280, 720)
     elif args.size == '1080p':
@@ -49,9 +47,7 @@ def main(*args):
         else:
             size = None
 
-    
-  
-    win = Window(size=size, is_overlay=args.overlay, color=pygame.Color(args.background)) 
+    win = Window(size=size, is_overlay=args.overlay, color=pygame.Color(args.background))
 
     watch_list = []
     card_list = []
@@ -91,5 +87,4 @@ def main(*args):
 
 
 if __name__ == "__main__":
-
     main()
