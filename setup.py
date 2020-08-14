@@ -3,13 +3,14 @@ import os
 
 requirements = [
         'pygame>=1.9,<2',
+        'tk-tools==0.13.0',
     ]
 if os.name == 'nt':
     requirements.append('pywin32')
 
 setup(
     name='edcompanion',
-    version='0.1.6',
+    version='0.2.0',
     url='https://github.com/djaney/edcompanion',
     author='Djane Rey Mabelin',
     author_email='thedjaney@gmail.com',
@@ -19,7 +20,7 @@ setup(
     install_requires=requirements,
     entry_points={
         'gui_scripts': [
-            'edcompanion=scripts.edcompanion:main',
+            'edcompanion=scripts.launcher:main',
         ]
     },
     package_data={

@@ -2,6 +2,7 @@ import pygame
 
 from pygame.locals import *
 import os
+from overlays.constants import TITLE
 
 
 class Window(object):
@@ -14,7 +15,7 @@ class Window(object):
             os.environ['SDL_VIDEO_WINDOW_POS'] = "0,0"
         
         pygame.init()
-        pygame.display.set_caption("Elite: Dangerous Companion")
+        pygame.display.set_caption(TITLE)
 
         if size is None:
             size = (0, 0)

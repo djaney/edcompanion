@@ -10,7 +10,7 @@ import platform
 import os
 
 
-def main():
+def main(*args):
 
     if platform.system().lower() == 'linux':
         default_dir = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
@@ -28,7 +28,10 @@ def main():
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
     parser.add_argument('--overlay', '-o', default=False, action='store_true', help="Overlay mode (windows only)")
 
-    args = parser.parse_args()
+    if len(args) == 0:
+        args = None
+
+    args = parser.parse_args(args)
 
     journal_path = args.dir
 
