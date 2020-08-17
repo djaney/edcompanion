@@ -147,8 +147,7 @@ class CurrentSystemCard(BaseCard):
         else:
             return None
 
-    def __get_is_good_moon_photo(self, body):
-        body_id = str(body['BodyID'])
+    def __get_is_moonrise(self, body):
         if 'ParentSizeInPicturePlane' in body:
             return False
         if 'OrbitalRadius' not in body:
@@ -176,7 +175,10 @@ class CurrentSystemCard(BaseCard):
         distance_to_parent = body['OrbitalRadius'] - body['Radius']
         picture_plane_size = math.tan(45) * distance_to_parent * 2
         body_view_size = parent_diameter / picture_plane_size * 100
-        return body_view_size >= self.PARENT_SIZE_IN_VIEW_THREASHOLD
+        if body_view_size >= self.PARENT_SIZE_IN_VIEW_THREASHOLD:
+            return 'Moonrise {}% of the sky'.format(body_view_size)
+        else:
+            return False
 
     @staticmethod
     def __get_item_label(b):
@@ -212,37 +214,29 @@ class CurrentSystemCard(BaseCard):
         return False
 
     @staticmethod
-    def __get_is_scoopable(b):
-        if 'StarType' in b and b['StarType'] != '':
-            is_star = True
-
-            is_interesting_star_type = True if b['StarType'].upper() in [
-                'H', 'N', 'X', 'TTS', 'AEBE',
-                'SUPERMASSIVEBLACKHOLE', 'ROGUEPLANET'
-            ] else False
-
-            return True if b['StarType'].upper() in [
-                'K', 'B', 'G', 'F', 'O', 'A', 'M'
-            ] else False
-
-        return False
-
-    @staticmethod
     def __get_is_interesting_star(b):
+        is_interesting = False
         if 'StarType' in b and b['StarType'] != '':
-            return True if b['StarType'].upper() in [
+            is_interesting = True if b['StarType'].upper() in [
                 'H', 'N', 'X', 'TTS', 'AEBE',
                 'SUPERMASSIVEBLACKHOLE', 'ROGUEPLANET'
             ] else False
-        return False
+        return 'Interesting' if is_interesting else False
 
     def __get_is_high_g(self, b):
         if 'Landable' in b and b['Landable']:
             if 'SurfaceGravity' in b:
                 gravity = self.mpss_to_g(b['SurfaceGravity'])
                 if gravity >= self.HIGH_GRAVITY_THREASHOLD:
-                    return True
+                    return 'High G planet'
         return False
+
+    def add_poi(self, function, body):
+        value = function(body)
+        if 'POI' not in body:
+            body['POI'] = []
+        if value:
+            body['POI'].append(value)
 
     def perform_build_data(self):
         for e in self.journal.events:
@@ -268,14 +262,13 @@ class CurrentSystemCard(BaseCard):
 
                 self.bodies[body_id]['ItemLabel'] = self.__get_item_label(e)
                 self.bodies[body_id]['ShouldScan'] = self.__get_should_scan(e)
-                self.bodies[body_id]['HighG'] = self.__get_is_high_g(e)
-                self.bodies[body_id]['POI'] = {
-                    'is_interesting_star': self.__get_is_interesting_star(e),
-                }
+
+                self.add_poi(self.__get_is_interesting_star, e)
+                self.add_poi(self.__get_is_high_g, e)
 
             if e['event'] == 'FSSAllBodiesFound':
                 for i, b in self.bodies.items():
-                    self.bodies[i]['POI']['is_good_moon_photo'] = self.__get_is_good_moon_photo(b)
+                    self.add_poi(self.__get_is_moonrise, e)
 
         # re order by ID
         keys = self.bodies.keys()
@@ -287,35 +280,24 @@ class CurrentSystemCard(BaseCard):
 
     def perform_draw(self):
 
-        rect = self.print_line(self.surface, self.h1_font, self.current_system)
+        self.print_line(self.surface, self.h1_font, self.current_system)
 
         # printing
         for i, (k, b) in enumerate(self.bodies.items()):
-            if rect.top > self.height - rect.height * 3:
-                rect = self.print_line(self.surface, self.normal_font,
-                                       "{} more...".format(len(self.bodies.items()) - i), y=rect.bottom,
-                                       x=constants.MARGIN)
-                break
+
+            poi = b['POI']
+
+            if b['ShouldScan']:
+                color = constants.COLOR_SHOULD_SCAN
+            elif len(poi) > 0:
+                color = constants.COLOR_INTERESTING_1
             else:
+                color = constants.COLOR_COCKPIT
 
-                poi = b['POI']
-
-                interest_level = len([i for i in poi.values() if i is True]) / len(poi)
-                interest_level = math.ceil(interest_level * 3)
-                if b['ShouldScan']:
-                    color = constants.COLOR_SHOULD_SCAN
-                elif b['HighG']:
-                    color = constants.COLOR_DANGER
-                elif interest_level == 1:
-                    color = constants.COLOR_INTERESTING_1
-                elif interest_level == 2:
-                    color = constants.COLOR_INTERESTING_2
-                elif interest_level == 3:
-                    color = constants.COLOR_INTERESTING_3
-                else:
-                    color = constants.COLOR_COCKPIT
-                item_label = b['ItemLabel']
-                rect = self.print_line(self.surface, self.normal_font, item_label, color=color)
+            item_label = b['ItemLabel']
+            if len(poi) > 0:
+                item_label = "{} [{}]".format(item_label, ",".join(poi))
+            self.print_line(self.surface, self.normal_font, item_label, color=color)
 
 
 class RouteCard(BaseCard):
