@@ -39,22 +39,25 @@ class RaceCard(BaseCard):
         if index == 0:
             self.time_start = self.journal.now()
             self.waypoints[index] = self.time_start
-        elif index == len(self.waypoints)-1:
+        elif index == len(self.waypoints) - 1:
             self.time_end = self.journal.now()
             self.waypoints[index] = self.time_end
         else:
             self.waypoints[index] = self.journal.now()
 
     @staticmethod
-    def get_distance(a, b):
-        return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2)
+    def get_distance(a, b, planet_radius):
+        units_per_decree = planet_radius * 2 * math.pi / 360
+        return math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) * units_per_decree
 
     def get_ship_position(self):
         status = self.journal.get_status()
         lat = status['Latitude'] if 'Latitude' in status else None
         lng = status['Longitude'] if 'Longitude' in status else None
         alt = status['Altitude'] if 'Altitude' in status else None
-        return lat, lng, alt
+        # meters
+        rad = status['PlanetRadius'] if 'PlanetRadius' in status else 6371000
+        return lat, lng, rad, alt
 
     def perform_build_data(self):
 
@@ -66,23 +69,19 @@ class RaceCard(BaseCard):
         wp_event = current_waypoint['event']
 
         if wp_event == 'Pass':
-            lat, lng, alt = self.get_ship_position()
+            lat, lng, planet_radius, alt = self.get_ship_position()
             if lat is not None and lng is not None:
-                distance = self.get_distance((lat, lng), (wp_lat, wp_lng))
+                distance = self.get_distance((lat, lng), (wp_lat, wp_lng), planet_radius)
                 if distance <= wp_range:
                     self.waypoint_done(current_waypoint_index)
         else:
             for e in self.journal.events:
                 if e['event'] == wp_event:
-                    lat, lng, alt = self.get_ship_position()
+                    lat, lng, planet_radius, alt = self.get_ship_position()
                     if lat is not None and lng is not None:
-                        distance = self.get_distance((lat, lng), (wp_lat, wp_lng))
+                        distance = self.get_distance((lat, lng), (wp_lat, wp_lng), planet_radius)
                         if distance <= wp_range:
                             self.waypoint_done(current_waypoint_index)
-
-
-
-
 
     def perform_draw(self):
         pass
