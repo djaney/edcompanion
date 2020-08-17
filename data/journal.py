@@ -2,10 +2,11 @@ import os
 import re
 import json
 from datetime import datetime
+from data.config import Config
 
 
 class JournalWatcher:
-    def __init__(self, directory=None, watch=None):
+    def __init__(self, directory=None, watch=None, config=None):
         self.directory = directory
         # track file last update
         self.last_update = None
@@ -19,6 +20,11 @@ class JournalWatcher:
             self.watch = []
         else:
             self.watch = watch
+
+        if config is None:
+            self.config = Config()
+        else:
+            self.config = config
 
     def __get_journal_files(self):
         """
@@ -75,6 +81,9 @@ class JournalWatcher:
     def __extract(self, file):
         for e in self.__journal_event_generator([file]):
             event_name = e['event']
+
+            if 'timestamp' in e:
+                e['timestamp'] = self.__parse_timestamp(e['timestamp'])
             # record events
             if event_name in self.watch:
                 self.__events.append(e)
@@ -107,6 +116,13 @@ class JournalWatcher:
             return []
 
         return route['Route']
+
+    def get_status(self):
+        # todo
+        pass
+
+    def get_race(self):
+        return self.config.get_race()
 
     @property
     def events(self):
