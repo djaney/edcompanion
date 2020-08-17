@@ -4,7 +4,6 @@ from data.journal import JournalWatcher
 import pygame
 import argparse
 import re
-from datetime import datetime
 from overlays import cards
 import platform
 import os

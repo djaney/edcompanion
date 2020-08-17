@@ -135,9 +135,7 @@ class Simulator:
     def simulate(self):
 
         # clear temporary journal
-        files = glob.glob('.tmp/*')
-        for f in files:
-            os.remove(f)
+        self.reset()
 
         # write initial heading
         self.write((self.gen_file_header, {}))
@@ -171,6 +169,11 @@ class Simulator:
                 # jump to next
                 system_index += 1
                 self.write((self.get_fsd_jump, {'index': system_index}))
+
+    def reset(self):
+        files = glob.glob('.tmp/*')
+        for f in files:
+            os.remove(f)
 
 
 if __name__ == "__main__":
