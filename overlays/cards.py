@@ -2,6 +2,7 @@ from collections import OrderedDict
 from overlays import constants
 import pygame
 import math
+from datetime import datetime, timedelta
 
 
 class BaseCard:
@@ -304,6 +305,13 @@ class RouteCard(BaseCard):
     route = []
     current_address = None
     position_in_route = -1
+    start_coords = None
+    end_coords = None
+    current_coords = None
+    last_jump_time = None
+    jump_time_history = []
+    last_time_in_system = None
+    eta = None
 
     @staticmethod
     def watched():
@@ -313,9 +321,29 @@ class RouteCard(BaseCard):
         for e in self.journal.events:
             if e['event'] == 'NavRoute':
                 self.route = self.journal.get_route()
+                self.jump_time_history = []
             elif e['event'] == 'FSDJump':
                 self.current_address = e['SystemAddress']
                 self.route = self.journal.get_route()
+                self.jump_time_history = []
+
+                current_time = datetime.now()
+                if self.last_jump_time is not None:
+                    self.last_time_in_system = current_time - self.last_jump_time
+                    self.jump_time_history.append(self.last_time_in_system)
+
+                self.last_jump_time = current_time
+                if 'StarPos' in e:
+                    self.current_coords = e['StarPos']
+
+            if len(self.route) == 0:
+                self.start_coords = None
+                self.end_coords = None
+            elif len(self.route) > 0:
+                if 'StarPos' in self.route[0]:
+                    self.start_coords = self.route[0]['StarPos']
+                if 'StarPos' in self.route[-1]:
+                    self.end_coords = self.route[-1]['StarPos']
 
             if 'SystemAddress' in e:
                 self.position_in_route = -1
@@ -323,6 +351,13 @@ class RouteCard(BaseCard):
                     if r['SystemAddress'] == self.current_address:
                         self.position_in_route = route_pos
                         break
+
+            if self.last_time_in_system and self.position_in_route and len(self.route) > 0 and len(
+                    self.jump_time_history) > 0:
+                self.eta = timedelta(seconds=(len(self.route) - self.position_in_route - 1) * (
+                        sum([t.seconds for t in self.jump_time_history]) / len(self.jump_time_history)))
+            else:
+                self.eta = None
 
     def perform_draw(self):
 
@@ -338,6 +373,26 @@ class RouteCard(BaseCard):
         width = self.surface.get_width()
         height = self.surface.get_height()
         distance = width // (len(route_slice) + 1)
+
+        if self.last_time_in_system is not None:
+            self.print_line(self.surface, self.normal_font,
+                            "Last time in system: {}".format(self.last_time_in_system.seconds))
+        if self.eta:
+            if self.eta.total_seconds() < 60:
+                self.print_line(self.surface, self.normal_font,
+                                "ETA: {} seconds".format(self.eta.seconds))
+            elif self.eta.total_seconds() < 60 * 60:
+                self.print_line(self.surface, self.normal_font,
+                                "ETA: {} minutes".format(self.eta.seconds // 60))
+            elif self.eta.total_seconds() < 60 * 60 * 24:
+                self.print_line(self.surface, self.normal_font,
+                                "ETA: {} hours".format(self.eta.seconds / 60 // 60))
+            elif self.eta.total_seconds() < 60 * 60 * 24 * 7:
+                self.print_line(self.surface, self.normal_font,
+                                "ETA: {} days".format(self.eta.seconds / 60 / 60 // 24))
+            else:
+                self.print_line(self.surface, self.normal_font,
+                                "ETA: {} weeks".format(self.eta.seconds / 60 / 60 / 24 // 7))
 
         for list_index, (position_index, stop) in enumerate(route_slice):
             radius = 20
