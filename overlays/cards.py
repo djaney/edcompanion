@@ -374,9 +374,6 @@ class RouteCard(BaseCard):
         height = self.surface.get_height()
         distance = width // (len(route_slice) + 1)
 
-        if self.last_time_in_system is not None:
-            self.print_line(self.surface, self.normal_font,
-                            "Last time in system: {}".format(self.last_time_in_system.seconds))
         if self.eta:
             if self.eta.total_seconds() < 60:
                 self.print_line(self.surface, self.normal_font,
