@@ -7,6 +7,7 @@ import re
 from overlays import cards
 import platform
 import os
+from data.config import Config
 
 
 def main(*args):
@@ -20,11 +21,12 @@ def main(*args):
         default_dir = None
 
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
-    parser.add_argument('activity', type=str, choices=['exploration'], default='exploration')
+    parser.add_argument('activity', type=str, choices=['exploration', 'race', 'create-race'], default='exploration')
     parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
     parser.add_argument('--overlay', '-o', default=False, action='store_true', help="Overlay mode (windows only)")
+    parser.add_argument('--config', '-c', type=str, default='', help="config path")
 
     if len(args) == 0:
         args = None
@@ -51,24 +53,43 @@ def main(*args):
     watch_list = []
     card_list = []
 
+    config = None
+
+    if args.config:
+        config = Config(config_dir=args.config)
+
     journal = JournalWatcher(
         watch=[],
-        directory=journal_path
+        directory=journal_path,
+        config=config
     )
+
+    def append_card(card_class, **kwargs):
+        c = card_class(win.screen, journal, **kwargs)
+        for w in c.watched():
+            watch_list.append(w)
+        card_list.append(c)
 
     if args.activity == 'exploration':
         # exploration card
-        card = cards.ExplorationCard(win.screen, journal, position=(0, 1), card_size=(1, 2))
-        watch_list += card.watched()
-        card_list.append(card)
+        append_card(cards.ExplorationCard, position=(0, 1), card_size=(1, 2))
         # current system card
-        card = cards.CurrentSystemCard(win.screen, journal, position=(2, 1), text_align='right', card_size=(1, 2))
-        watch_list += card.watched()
-        card_list.append(card)
+        append_card(cards.CurrentSystemCard, position=(2, 1), text_align='right', card_size=(1, 2))
         # route card
-        card = cards.RouteCard(win.screen, journal, position=(0, 0), text_align='left', card_size=(3, 1))
-        watch_list += card.watched()
-        card_list.append(card)
+        append_card(cards.RouteCard, position=(0, 0), text_align='left', card_size=(3, 1))
+    elif args.activity == 'race':
+        # exploration card
+        if args.overlay:
+            append_card(cards.RaceCard, position=(2, 0), card_size=(1, 1))
+        else:
+            append_card(cards.RaceCard, position=(0, 0), card_size=(3, 3))
+
+    elif args.activity == 'create-race':
+        # exploration card
+        if args.overlay:
+            append_card(cards.CreateRaceCard, position=(2, 0), card_size=(1, 1))
+        else:
+            append_card(cards.CreateRaceCard, position=(0, 0), card_size=(3, 3))
     else:
         raise NotImplementedError("{} not implemented".format(args.activity))
 

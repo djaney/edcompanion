@@ -20,6 +20,8 @@ class Config(object):
                 self.dir = '{}\\Saved Games\\edcompanion'.format(os.environ.get('USERPROFILE', ''))
             else:
                 raise OSError("Unsupported OS")
+        else:
+            self.dir = config_dir
 
         if not os.path.isdir(self.dir):
             os.makedirs(self.dir, exist_ok=True)
@@ -70,3 +72,11 @@ class Config(object):
     def get_races(self):
         # todo
         pass
+
+    def save_race(self, filename, name, waypoints):
+        os.makedirs(os.path.join(self.dir, self.RACES_DIR), exist_ok=True)
+        with open(os.path.join(self.dir, self.RACES_DIR, filename), 'w') as fp:
+            json.dump({
+            "name": name,
+            "waypoints": waypoints
+        }, fp)

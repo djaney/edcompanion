@@ -1,4 +1,5 @@
 import tempfile
+import math
 from datetime import date, datetime
 import json
 from collections import OrderedDict
@@ -6,6 +7,7 @@ import time
 import random
 import os
 import glob
+import argparse
 
 
 class Simulator:
@@ -91,18 +93,24 @@ class Simulator:
 
         return route_dict
 
-    def write(self, event):
+    def write(self, event, sleep=True):
         func, kwargs = event
         with open(self.get_filename(), 'a') as file:
             line = func(**kwargs)
             file.write(line + "\n")
             print(line)
         self.line_count += 1
-        time.sleep(0.5)
+        if sleep:
+            time.sleep(0.5)
 
         if self.line_count % 10 == 0:
             self.part += 1
-            self.write((self.gen_file_header, {}))
+            self.write((self.gen_file_header, {}), sleep=sleep)
+
+    def write_status(self, event):
+        with open(os.path.join('.tmp', 'status.json'), 'w') as file:
+            json.dump(event, file)
+        print(event)
 
     def get_filename(self):
         return os.path.join(
@@ -132,7 +140,7 @@ class Simulator:
              "BodyType": "Star", "JumpDist": 54.522,
              "FuelUsed": 10, "FuelLevel": 50})
 
-    def simulate(self):
+    def simulate_exploration(self):
 
         # clear temporary journal
         self.reset()
@@ -170,6 +178,48 @@ class Simulator:
                 system_index += 1
                 self.write((self.get_fsd_jump, {'index': system_index}))
 
+    def simulate_race(self):
+
+        def status_params(coord, rad):
+            return {
+                "timestamp": self.get_timestamp(),
+                "Latitude": coord[0],
+                "Longitude": coord[1],
+                "PlanetRadius": rad,
+            }
+
+        def journal_params(event=None):
+            return json.dumps({
+                "timestamp": self.get_timestamp(),
+                "event": event,
+            })
+        # clear temporary journal
+        self.reset()
+        self.write((self.gen_file_header, {}))
+        time.sleep(5)
+        lat = 0
+        lng = 0
+        heading = 1
+        speed = 0.02
+        self.write_status(status_params((lat, lng), 5000))
+        self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
+
+        random.seed('funky race')
+        for _ in range(100):
+
+            time.sleep(0.5)
+
+            heading += random.randrange(-45, 45, 1)
+            heading = heading % 360
+
+            rad = math.radians(heading)
+
+            lat += speed * math.cos(rad)
+            lng += speed * math.sin(rad)
+
+            self.write_status(status_params((lat, lng), 5000))
+        self.write((journal_params, {"event": "DockFighter"}), sleep=False)
+
     def reset(self):
         files = glob.glob('.tmp/*')
         for f in files:
@@ -177,4 +227,10 @@ class Simulator:
 
 
 if __name__ == "__main__":
-    Simulator().simulate()
+    parser = argparse.ArgumentParser(description='Simulator')
+    parser.add_argument('activity', type=str, choices=['exploration', 'race'])
+    args = parser.parse_args()
+    if args.activity == 'exploration':
+        Simulator().simulate_exploration()
+    elif args.activity == 'race':
+        Simulator().simulate_race()

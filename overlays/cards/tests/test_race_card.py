@@ -15,7 +15,7 @@ class RaceCardTestCase(TestCase):
         config = config_class()
         surface.get_size.return_value = (100, 100)
 
-        config.get_race.return_value = {
+        config.get_race_details.return_value = {
             "name": "Sample Race",
             "waypoints": [
                 {"event": "LaunchFighter", "lat": 0, "lng": 0, "range": 0.1},
@@ -24,7 +24,7 @@ class RaceCardTestCase(TestCase):
             ]
         }
 
-        journal.get_race.return_value = config.get_race()
+        journal.get_race_details.return_value = config.get_race_details()
         card = RaceCard(surface, journal)
         card.perform_draw = MagicMock()
 
@@ -51,6 +51,12 @@ class RaceCardTestCase(TestCase):
         self.assertEqual(None, card.waypoints[2])
 
         # pass WP
+        journal.events = [
+            {
+                "timestamp": time_w1,
+                'event': 'Pass',
+            }
+        ]
         journal.get_status.return_value = {"timestamp": time_w1, "Latitude": 0, "Longitude": 1}
         journal.now.return_value = time_w1
         card.render()
@@ -59,6 +65,12 @@ class RaceCardTestCase(TestCase):
         self.assertEqual(None, card.waypoints[2])
 
         # to ignore
+        journal.events = [
+            {
+                "timestamp": time_w1,
+                'event': 'Pass',
+            }
+        ]
         journal.get_status.return_value = {"timestamp": time_w1, "Latitude": 0, "Longitude": -0.1}
         journal.now.return_value = time_w1
         card.render()
@@ -90,16 +102,16 @@ class RaceCardTestCase(TestCase):
         config = config_class()
         surface.get_size.return_value = (100, 100)
 
-        config.get_race.return_value = {
+        config.get_race_details.return_value = {
             "name": "Sample Race",
             "waypoints": [
-                {"event": "Liftoff", "lat": 0, "lng": 0, "range": 0.1},
-                {"event": "Touchdown", "lat": 0, "lng": 1, "range": 0.1},
-                {"event": "Touchdown", "lat": 0, "lng": 0, "range": 0.1},
+                {"event": "Liftoff", "lat": 0, "lng": 0},
+                {"event": "Touchdown", "lat": 0, "lng": 1},
+                {"event": "Touchdown", "lat": 0, "lng": 0},
             ]
         }
 
-        journal.get_race.return_value = config.get_race()
+        journal.get_race_details.return_value = config.get_race_details()
         card = RaceCard(surface, journal)
 
         card.perform_draw = MagicMock()
