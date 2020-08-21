@@ -62,8 +62,7 @@ class RaceCard(BaseCard):
 
     @staticmethod
     def get_km_per_degree(planet_radius):
-        # TODO planet_radius is assumed to be in KM
-        return planet_radius * 2 * math.pi / 360
+        return (planet_radius / 1000) * 2 * math.pi / 360
 
     @staticmethod
     def get_distance_as_km(a, b, planet_radius):
