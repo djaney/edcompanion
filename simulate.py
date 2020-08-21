@@ -206,6 +206,11 @@ class Simulator:
         # clear temporary journal
         self.reset()
         self.write((self.gen_file_header, {}))
+
+        # skip frames
+        for _ in range(30):
+            yield True
+
         lat = 0
         lng = 0
         heading = 1
@@ -220,7 +225,7 @@ class Simulator:
         iteration = 0
         while True:
             # skip frames
-            for _ in range(30):
+            for _ in range(15):
                 yield True
 
             iteration += 1

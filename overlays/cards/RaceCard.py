@@ -51,12 +51,12 @@ class RaceCard(BaseCard):
             self.waypoints[index] = self.journal.now()
 
     @staticmethod
-    def get_unit_per_decree(planet_radius):
+    def get_km_per_decree(planet_radius):
         return planet_radius * 2 * math.pi / 360
 
     @staticmethod
-    def get_distance_as_m(a, b, planet_radius):
-        units_per_decree = RaceCard.get_unit_per_decree(planet_radius)
+    def get_distance_as_km(a, b, planet_radius):
+        units_per_decree = RaceCard.get_km_per_decree(planet_radius)
         return RaceCard.get_distance_as_degree(a, b) * units_per_decree
 
     @staticmethod
@@ -78,15 +78,15 @@ class RaceCard(BaseCard):
 
         wp_lat = current_waypoint['lat']
         wp_lng = current_waypoint['lng']
-        wp_range = current_waypoint.get('range', 500)
+        wp_range_km = current_waypoint.get('range', 0.5)
         wp_event = current_waypoint['event']
 
         for e in self.journal.events:
             if e['event'] == wp_event:
                 lat, lng, planet_radius, alt = self.get_ship_position()
                 if lat is not None and lng is not None:
-                    distance = self.get_distance_as_m((lat, lng), (wp_lat, wp_lng), planet_radius)
-                    if distance <= wp_range:
+                    distance = self.get_distance_as_km((lat, lng), (wp_lat, wp_lng), planet_radius)
+                    if distance <= wp_range_km:
                         self.waypoint_done(current_waypoint_index)
 
     def perform_draw(self):
