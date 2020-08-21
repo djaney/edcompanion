@@ -23,7 +23,7 @@ def open_companion(*args, options=None):
     return open_window
 
 
-def select_race(setter):
+def select_race(is_overlay):
     def execute():
         conf = Config()
         filename = filedialog.askopenfilename(
@@ -33,7 +33,23 @@ def select_race(setter):
                 ("Race JSON", "*.json"),
             )
         )
-        setter(filename)
+        if filename:
+            if is_overlay.get() == 1:
+                open_companion(
+                    'race',
+                    '--arg1',
+                    filename,
+                    options={"is_overlay": is_overlay}
+                )()
+            else:
+                open_companion(
+                    'race',
+                    '--size',
+                    '800x900',
+                    '--arg1',
+                    filename,
+                    options={"is_overlay": is_overlay}
+                )()
 
     return execute
 
@@ -63,31 +79,10 @@ def main():
 
         race_name = tk.Label(parent, textvariable=race_name_text)
         race_name.pack()
-        race_filename = tk.StringVar()
-
-        def set_race_filename(filename):
-            if not filename:
-                return None
-            race_filename.set(filename)
-            with open(race_filename.get(), 'r') as fp:
-                try:
-                    data = json.load(fp)
-                    race_name_text.set(data.get("name", "NO NAME"))
-                except json.JSONDecodeError:
-                    race_filename.set("")
 
         tk.Button(
             parent, text="Select",
-            command=select_race(set_race_filename)
-        ).pack(fill="x")
-        tk.Button(
-            parent, text="Run",
-            command=open_companion(
-                'race',
-                '--arg1',
-                lambda: race_filename.get(),
-                options={"is_overlay": is_overlay}
-            )
+            command=select_race(is_overlay)
         ).pack(fill="x")
 
         tk.Button(
