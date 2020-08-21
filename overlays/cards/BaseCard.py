@@ -3,7 +3,7 @@ import pygame
 
 
 class BaseCard:
-    __line_y = 0
+    line_y = 0
 
     def __init__(self, screen, journal, position=(0, 0), text_align='left', card_size=(1, 1)):
         self.screen = screen
@@ -22,7 +22,7 @@ class BaseCard:
 
     def clear(self):
         self.surface.fill((0, 0, 0, 0))
-        self.__line_y = 0
+        self.line_y = 0
 
     @staticmethod
     def mpss_to_g(mpss):
@@ -37,9 +37,9 @@ class BaseCard:
             name_rect.left = constants.MARGIN
         else:
             name_rect.right = self.width - constants.MARGIN
-        name_rect.top = self.__line_y
+        name_rect.top = self.line_y
         screen.blit(name_text, name_rect)
-        self.__line_y = name_rect.bottom
+        self.line_y = name_rect.bottom
         return name_rect
 
     def get_blit_position(self):

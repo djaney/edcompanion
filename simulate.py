@@ -224,6 +224,11 @@ class Simulator:
         heading = 1
         speed = 0.02
         self.write_status(status_params((lat, lng), 5000))
+
+        # skip frames
+        for _ in range(30):
+            yield True
+
         self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
 
         yield True
