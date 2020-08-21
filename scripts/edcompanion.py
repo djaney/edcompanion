@@ -8,7 +8,7 @@ from overlays import cards
 import platform
 import os
 from data.config import Config
-from simulate import Simulator
+from simulator import Simulator
 
 
 def main(*args):
