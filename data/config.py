@@ -67,12 +67,8 @@ class Config(object):
         self.selected_race = name
 
     def get_race_details(self):
-        with open(os.path.join(self.dir, self.RACES_DIR, self.selected_race), 'r') as fp:
+        with open(self.selected_race, 'r') as fp:
             return json.load(fp)
-
-    def get_races(self):
-        # todo
-        pass
 
     def save_race(self, filename, name, waypoints):
         os.makedirs(os.path.join(self.dir, self.RACES_DIR), exist_ok=True)

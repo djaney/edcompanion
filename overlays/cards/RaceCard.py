@@ -72,11 +72,11 @@ class RaceCard(BaseCard):
 
     def get_ship_position(self):
         status = self.journal.get_status()
-        lat = status['Latitude'] if 'Latitude' in status else None
-        lng = status['Longitude'] if 'Longitude' in status else None
-        alt = status['Altitude'] if 'Altitude' in status else None
+        lat = status.get('Latitude', None)
+        lng = status.get('Longitude', None)
+        alt = status.get('Altitude', None)
         # km
-        rad = status['PlanetRadius'] if 'PlanetRadius' in status else 6371
+        rad = status.get('PlanetRadius', 6371)
         return lat, lng, rad, alt
 
     def perform_build_data(self):
@@ -204,9 +204,55 @@ class RaceCard(BaseCard):
 
         return new_x, new_y
 
+    def __draw_time(self, start, end):
+
+        text = "GO TO STARTING POSITION"
+
+        if end and start:
+            elapsed = (end - start)
+            text = "{:02}:{:02}:{:02}:{:02} FINISHED".format(elapsed.seconds // 60 // 60, elapsed.seconds // 60, elapsed.seconds,
+                                                    elapsed.microseconds // 1000)
+        elif start:
+            elapsed = (datetime.now() - self.time_start)
+            text = "{:02}:{:02}:{:02}:{:02}".format(elapsed.seconds // 60 // 60, elapsed.seconds // 60, elapsed.seconds,
+                                                    elapsed.microseconds // 1000)
+
+        time_label = self.h1_font.render(text, False, constants.COLOR_COCKPIT)
+        time_rect = time_label.get_rect()
+        time_rect.left = constants.MARGIN
+        time_rect.top = constants.MARGIN
+
+        self.surface.blit(time_label, time_rect)
+
+    def __draw_next_waypoint(self):
+        index, _ = self.get_current_waypoint()
+        index += 1
+
+        if index >= 0 and index < len(self.race['waypoints']):
+            next = self.race['waypoints'][index]
+
+            if self.journal.get_status():
+                lat, lng, rad, alt = self.get_ship_position()
+                t_lat = next.get("lat", None)
+                t_lng = next.get("lng", None)
+
+                if lat and lng and t_lat and t_lng:
+                    rad = math.atan2(t_lng - lng, t_lat - lat)
+                    deg = math.degrees(rad)
+
+                    text = "NEXT Lat: {:0.3f} Lng: {:0.3f}, Hdg: {:0.3f}".format(t_lat, t_lng, deg)
+                    time_label = self.h1_font.render(text, False, constants.COLOR_COCKPIT)
+                    time_rect = time_label.get_rect()
+                    time_rect.right = self.surface.get_width() - constants.MARGIN
+                    time_rect.top = constants.MARGIN
+                    self.surface.blit(time_label, time_rect)
+
+
     def perform_draw(self):
         index, _ = self.get_current_waypoint()
         self.draw_waypoints(self.race['waypoints'], index)
+        self.__draw_time(self.time_start, self.time_end)
+        self.__draw_next_waypoint()
 
 
 class CreateRaceCard(RaceCard):
