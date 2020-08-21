@@ -58,7 +58,8 @@ class BaseCard:
 
     def render(self):
         self.clear()
-        self.perform_build_data()
+        if self.journal.is_modified:
+            self.perform_build_data()
         self.perform_draw()
         self.screen.blit(self.surface, self.get_blit_position())
 

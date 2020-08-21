@@ -155,8 +155,10 @@ class Simulator:
         self.reset()
 
         # write initial heading
-        self.write((self.gen_file_header, {}))
-
+        self.write((self.gen_file_header, {}), sleep=False)
+        yield True
+        for _ in range(30):
+            yield True
         # each loop iteration is one star system
         system_index = 1
 
@@ -182,10 +184,16 @@ class Simulator:
                         'star_system': star_system,
                         'distance_index': body_index
                     })
-                    self.write((func, args))
+                    self.write((func, args), sleep=False)
+                    yield True
+                    for _ in range(30):
+                        yield True
                 # jump to next
                 system_index += 1
-                self.write((self.get_fsd_jump, {'index': system_index}))
+                self.write((self.get_fsd_jump, {'index': system_index}), sleep=False)
+                for _ in range(30):
+                    yield True
+                yield True
 
     def race(self):
 

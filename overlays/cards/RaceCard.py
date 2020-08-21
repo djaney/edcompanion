@@ -37,7 +37,14 @@ class RaceCard(BaseCard):
                 index = i
                 break
 
-        return index, self.race['waypoints'][index]
+        if not self.is_race_done():
+            return index, self.race['waypoints'][index]
+        else:
+            index = len(self.race['waypoints']) - 1
+            return index, self.race['waypoints'][index]
+
+    def is_race_done(self):
+        return self.time_end is not None
 
     def waypoint_done(self, index):
 
@@ -89,9 +96,6 @@ class RaceCard(BaseCard):
                     if distance <= wp_range_km:
                         self.waypoint_done(current_waypoint_index)
 
-    def perform_draw(self):
-        pass
-
     def __get_bounds(self, base_wp):
         x_max = None
         x_min = None
@@ -119,18 +123,18 @@ class RaceCard(BaseCard):
         else:
             return None
 
-    def draw_waypoints(self, base_wp, progress_wp=0):
+    def draw_waypoints(self, base_wp, progress_wp=-1):
         top_pad = 50
 
         size = min(self.surface.get_width(), self.surface.get_height())
         race_box = pygame.Surface((size - top_pad, size - top_pad), pygame.SRCALPHA)
         # draw race track
-        pygame.draw.rect(race_box, constants.COLOR_COCKPIT, (0, 0, race_box.get_width(), race_box.get_height()), 1)
+        # pygame.draw.rect(race_box, constants.COLOR_COCKPIT, (0, 0, race_box.get_width(), race_box.get_height()), 1)
 
         bounds = self.__get_bounds(base_wp)
         coord_list = []
         if bounds and bounds[1][0] - bounds[0][0] + bounds[1][-1] - bounds[0][1] != 0:
-            for w in base_wp:
+            for w_index, w in enumerate(base_wp):
                 coord = self.__get_surface_coords_from_lat_lng((w['lat'], w['lng']), bounds, race_box)
 
                 button_size = 10
@@ -145,8 +149,10 @@ class RaceCard(BaseCard):
                 elif w['event'] == 'Touchdown':
                     label = "T"
 
+                color = constants.COLOR_INTERESTING_3 if progress_wp >= w_index else constants.COLOR_COCKPIT
+
                 if label:
-                    pygame.draw.circle(race_box, constants.COLOR_COCKPIT, coord, button_size)
+                    pygame.draw.circle(race_box, color, coord, button_size)
                     dot_label = self.normal_font.render(label, False, pygame.Color("black"))
                     dot_label_rect = dot_label.get_rect()
                     dot_label_rect.center = coord
@@ -157,7 +163,7 @@ class RaceCard(BaseCard):
                     coord_list = coord_list[-2:]
 
                 if len(coord_list) >= 2:
-                    pygame.draw.line(race_box, constants.COLOR_COCKPIT, coord_list[0], coord_list[1])
+                    pygame.draw.line(race_box, color, coord_list[0], coord_list[1])
 
             self.surface.blit(race_box, (
                 self.surface.get_width() // 2 - race_box.get_width() // 2,
@@ -178,7 +184,7 @@ class RaceCard(BaseCard):
             return surface.get_height() - y
 
         def pad(v, total):
-            return v * (1 - padding*2) + (padding * total)
+            return v * (1 - padding * 2) + (padding * total)
 
         (min_x, min_y), (max_x, max_y) = bounds
         x, y = coord
@@ -197,6 +203,10 @@ class RaceCard(BaseCard):
         new_y = math.floor(new_y)
 
         return new_x, new_y
+
+    def perform_draw(self):
+        index, _ = self.get_current_waypoint()
+        self.draw_waypoints(self.race['waypoints'], index)
 
 
 class CreateRaceCard(RaceCard):

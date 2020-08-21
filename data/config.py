@@ -12,6 +12,8 @@ class Config(object):
 
     __config = {}
 
+    selected_race = None
+
     def __init__(self, config_dir=None):
         if config_dir is None:
             if platform.system().lower() == 'linux':
@@ -61,13 +63,12 @@ class Config(object):
                 if file_field in data:
                     self.__config[class_field] = data[file_field]
 
-    def select_race(self):
-        # todo
-        pass
+    def select_race(self, name):
+        self.selected_race = name
 
     def get_race_details(self):
-        # todo
-        pass
+        with open(os.path.join(self.dir, self.RACES_DIR, self.selected_race), 'r') as fp:
+            return json.load(fp)
 
     def get_races(self):
         # todo

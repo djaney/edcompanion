@@ -7,6 +7,7 @@ from data.config import Config
 
 
 class JournalWatcher:
+    is_modified = False
     def __init__(self, directory=None, watch=None, config=None):
         self.directory = directory
         # track file last update
@@ -100,8 +101,8 @@ class JournalWatcher:
             if event_name in self.watch:
                 self.__events.append(e)
 
-    def has_new(self):
-        is_modified = False
+    def refresh(self):
+        self.is_modified = False
         self.__events = []
         files = self.__get_journal_files()
         if len(files) > 0:
@@ -110,7 +111,7 @@ class JournalWatcher:
                 if self.last_update is None or last_file_stat.st_mtime > self.last_update:
                     self.__extract(file)
                     self.last_update = last_file_stat.st_mtime
-                    is_modified = True
+                    self.is_modified = True
 
         if self.is_include_pass_event:
             self.get_status()
@@ -125,9 +126,9 @@ class JournalWatcher:
                     "timestamp": timestamp,
                     "event": "Pass",
                 })
-                is_modified = True
+                self.is_modified = True
 
-        return is_modified
+        return self.is_modified
 
     def get_route(self):
         path = os.path.join(self.directory, 'NavRoute.json')
@@ -173,3 +174,6 @@ class JournalWatcher:
     @property
     def events(self):
         return self.__events
+
+    def now(self):
+        return datetime.now()
