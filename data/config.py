@@ -67,6 +67,8 @@ class Config(object):
         self.selected_race = name
 
     def get_race_details(self):
+        if not self.selected_race:
+            return None
         with open(self.selected_race, 'r') as fp:
             return json.load(fp)
 

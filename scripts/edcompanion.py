@@ -59,10 +59,10 @@ def main(*args):
     watch_list = []
     card_list = []
 
-    config = None
-
     if args.config:
         config = Config(config_dir=args.config)
+    else:
+        config = Config()
 
     journal = JournalWatcher(
         watch=[],
@@ -86,15 +86,14 @@ def main(*args):
         append_card(cards.CurrentSystemCard, position=(2, 1), text_align='right', card_size=(1, 2))
         # route card
         append_card(cards.RouteCard, position=(0, 0), text_align='left', card_size=(3, 1))
+
     elif args.activity == 'race':
-        # exploration card
         if args.overlay:
             append_card(cards.RaceCard, position=(2, 0), card_size=(1, 1))
         else:
             append_card(cards.RaceCard, position=(0, 0), card_size=(3, 3))
 
     elif args.activity == 'create-race':
-        # exploration card
         if args.overlay:
             append_card(cards.CreateRaceCard, position=(2, 0), card_size=(1, 1))
         else:
@@ -112,7 +111,8 @@ def main(*args):
 
     while win.loop():
 
-        sim.run()
+        if sim:
+            sim.run()
 
         journal.refresh()
         win.screen.fill(win.mask_color)
