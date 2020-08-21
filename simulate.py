@@ -13,6 +13,15 @@ import argparse
 class Simulator:
     part = 1
     line_count = 0
+    type = None
+
+    def __init__(self, type):
+        if type not in ['race', 'exploration']:
+            raise NotImplementedError(type+ " simulator")
+        self.type = type
+
+    def get_generator(self):
+        return getattr(self, self.type)()
 
     def get_date_stamp(self):
         today = date.today()
@@ -140,7 +149,7 @@ class Simulator:
              "BodyType": "Star", "JumpDist": 54.522,
              "FuelUsed": 10, "FuelLevel": 50})
 
-    def simulate_exploration(self):
+    def exploration(self):
 
         # clear temporary journal
         self.reset()
@@ -178,7 +187,7 @@ class Simulator:
                 system_index += 1
                 self.write((self.get_fsd_jump, {'index': system_index}))
 
-    def simulate_race(self):
+    def race(self):
 
         def status_params(coord, rad):
             return {
@@ -193,10 +202,10 @@ class Simulator:
                 "timestamp": self.get_timestamp(),
                 "event": event,
             })
+
         # clear temporary journal
         self.reset()
         self.write((self.gen_file_header, {}))
-        time.sleep(5)
         lat = 0
         lng = 0
         heading = 1
@@ -204,10 +213,21 @@ class Simulator:
         self.write_status(status_params((lat, lng), 5000))
         self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
 
-        random.seed('funky race')
-        for _ in range(100):
+        yield True
 
-            time.sleep(0.5)
+        random.seed('funky race')
+
+        iteration = 0
+        while True:
+            # skip frames
+            for _ in range(30):
+                yield True
+
+            iteration += 1
+            if iteration == 100:
+                self.write((journal_params, {"event": "DockFighter"}), sleep=False)
+                yield False
+                continue
 
             heading += random.randrange(-45, 45, 1)
             heading = heading % 360
@@ -216,9 +236,8 @@ class Simulator:
 
             lat += speed * math.cos(rad)
             lng += speed * math.sin(rad)
-
             self.write_status(status_params((lat, lng), 5000))
-        self.write((journal_params, {"event": "DockFighter"}), sleep=False)
+            yield True
 
     def reset(self):
         files = glob.glob('.tmp/*')
@@ -231,6 +250,6 @@ if __name__ == "__main__":
     parser.add_argument('activity', type=str, choices=['exploration', 'race'])
     args = parser.parse_args()
     if args.activity == 'exploration':
-        Simulator().simulate_exploration()
+        Simulator().exploration()
     elif args.activity == 'race':
-        Simulator().simulate_race()
+        Simulator().race()

@@ -8,6 +8,7 @@ from overlays import cards
 import platform
 import os
 from data.config import Config
+from simulate import Simulator
 
 
 def main(*args):
@@ -27,6 +28,7 @@ def main(*args):
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
     parser.add_argument('--overlay', '-o', default=False, action='store_true', help="Overlay mode (windows only)")
     parser.add_argument('--config', '-c', type=str, default='', help="config path")
+    parser.add_argument('--simulator', type=str, choices=['race'], default=None)
 
     if len(args) == 0:
         args = None
@@ -97,7 +99,14 @@ def main(*args):
 
     win.screen.fill(win.mask_color)
 
+    sim = None
+    if args.simulator:
+        sim = SimRunner(Simulator(args.simulator).get_generator())
+
     while win.loop():
+
+        sim.run()
+
         if journal.has_new():
             win.screen.fill(win.mask_color)
             for card in card_list:
@@ -105,6 +114,15 @@ def main(*args):
 
         pygame.display.update()
 
+
+class SimRunner():
+    active = True
+    def __init__(self, sim):
+        self.sim = sim
+
+    def run(self):
+        if self.active:
+            self.active = next(self.sim)
 
 if __name__ == "__main__":
     main()
