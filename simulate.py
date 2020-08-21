@@ -1,4 +1,5 @@
 import tempfile
+import math
 from datetime import date, datetime
 import json
 from collections import OrderedDict
@@ -6,11 +7,21 @@ import time
 import random
 import os
 import glob
+import argparse
 
 
 class Simulator:
     part = 1
     line_count = 0
+    type = None
+
+    def __init__(self, type):
+        if type not in ['race', 'exploration']:
+            raise NotImplementedError(type+ " simulator")
+        self.type = type
+
+    def get_generator(self):
+        return getattr(self, self.type)()
 
     def get_date_stamp(self):
         today = date.today()
@@ -91,18 +102,24 @@ class Simulator:
 
         return route_dict
 
-    def write(self, event):
+    def write(self, event, sleep=True):
         func, kwargs = event
         with open(self.get_filename(), 'a') as file:
             line = func(**kwargs)
             file.write(line + "\n")
             print(line)
         self.line_count += 1
-        time.sleep(0.5)
+        if sleep:
+            time.sleep(0.5)
 
         if self.line_count % 10 == 0:
             self.part += 1
-            self.write((self.gen_file_header, {}))
+            self.write((self.gen_file_header, {}), sleep=sleep)
+
+    def write_status(self, event):
+        with open(os.path.join('.tmp', 'status.json'), 'w') as file:
+            json.dump(event, file)
+        print(event)
 
     def get_filename(self):
         return os.path.join(
@@ -132,16 +149,16 @@ class Simulator:
              "BodyType": "Star", "JumpDist": 54.522,
              "FuelUsed": 10, "FuelLevel": 50})
 
-    def simulate(self):
+    def exploration(self):
 
         # clear temporary journal
-        files = glob.glob('.tmp/*')
-        for f in files:
-            os.remove(f)
+        self.reset()
 
         # write initial heading
-        self.write((self.gen_file_header, {}))
-
+        self.write((self.gen_file_header, {}), sleep=False)
+        yield True
+        for _ in range(30):
+            yield True
         # each loop iteration is one star system
         system_index = 1
 
@@ -167,11 +184,90 @@ class Simulator:
                         'star_system': star_system,
                         'distance_index': body_index
                     })
-                    self.write((func, args))
+                    self.write((func, args), sleep=False)
+                    yield True
+                    for _ in range(30):
+                        yield True
                 # jump to next
                 system_index += 1
-                self.write((self.get_fsd_jump, {'index': system_index}))
+                self.write((self.get_fsd_jump, {'index': system_index}), sleep=False)
+                for _ in range(30):
+                    yield True
+                yield True
+
+    def race(self):
+
+        def status_params(coord, rad):
+            return {
+                "timestamp": self.get_timestamp(),
+                "Latitude": coord[0],
+                "Longitude": coord[1],
+                "PlanetRadius": rad,
+            }
+
+        def journal_params(event=None):
+            return json.dumps({
+                "timestamp": self.get_timestamp(),
+                "event": event,
+            })
+
+        # clear temporary journal
+        self.reset()
+        self.write((self.gen_file_header, {}))
+
+        # skip frames
+        for _ in range(30):
+            yield True
+
+        lat = 0
+        lng = 0
+        heading = 1
+        speed = 0.02
+        self.write_status(status_params((lat, lng), 5000))
+
+        # skip frames
+        for _ in range(30):
+            yield True
+
+        self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
+
+        yield True
+
+        random.seed('funky race')
+
+        iteration = 0
+        while True:
+            # skip frames
+            for _ in range(15):
+                yield True
+
+            iteration += 1
+            if iteration == 100:
+                self.write((journal_params, {"event": "DockFighter"}), sleep=False)
+                yield False
+                continue
+
+            heading += random.randrange(-45, 45, 1)
+            heading = heading % 360
+
+            rad = math.radians(heading)
+
+            lat += speed * math.cos(rad)
+            lng += speed * math.sin(rad)
+            self.write_status(status_params((lat, lng), 5000))
+            yield True
+
+    def reset(self):
+        files = glob.glob('.tmp/*')
+        for f in files:
+            os.remove(f)
 
 
 if __name__ == "__main__":
-    Simulator().simulate()
+    parser = argparse.ArgumentParser(description='Simulator')
+    parser.add_argument('activity', type=str, choices=['exploration', 'race'])
+    args = parser.parse_args()
+    if args.activity == 'exploration':
+        Simulator().exploration()
+    elif args.activity == 'race':
+        Simulator().race()

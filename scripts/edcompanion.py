@@ -4,10 +4,11 @@ from data.journal import JournalWatcher
 import pygame
 import argparse
 import re
-from datetime import datetime
 from overlays import cards
 import platform
 import os
+from data.config import Config
+from simulate import Simulator
 
 
 def main(*args):
@@ -21,16 +22,22 @@ def main(*args):
         default_dir = None
 
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
-    parser.add_argument('activity', type=str, choices=['exploration'], default='exploration')
+    parser.add_argument('activity', type=str, choices=['exploration', 'race', 'create-race'], default='exploration')
     parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
     parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
     parser.add_argument('--overlay', '-o', default=False, action='store_true', help="Overlay mode (windows only)")
+    parser.add_argument('--config', '-c', type=str, default='', help="config path")
+    parser.add_argument('--simulator', type=str, choices=['race', 'exploration'], default=None)
+    parser.add_argument('--arg1', type=str, default=None)
 
     if len(args) == 0:
         args = None
 
     args = parser.parse_args(args)
+
+    if args.activity == 'race' and args.arg1 is None:
+        parser.error('--arg1 must be the race filename')
 
     journal_path = args.dir
 
@@ -52,24 +59,45 @@ def main(*args):
     watch_list = []
     card_list = []
 
+    if args.config:
+        config = Config(config_dir=args.config)
+    else:
+        config = Config()
+
     journal = JournalWatcher(
         watch=[],
-        directory=journal_path
+        directory=journal_path,
+        config=config
     )
+
+    if args.activity == 'race':
+        config.select_race(args.arg1)
+
+    def append_card(card_class, **kwargs):
+        c = card_class(win.screen, journal, **kwargs)
+        for w in c.watched():
+            watch_list.append(w)
+        card_list.append(c)
 
     if args.activity == 'exploration':
         # exploration card
-        card = cards.ExplorationCard(win.screen, journal, position=(0, 1), card_size=(1, 2))
-        watch_list += card.watched()
-        card_list.append(card)
+        append_card(cards.ExplorationCard, position=(0, 1), card_size=(1, 2))
         # current system card
-        card = cards.CurrentSystemCard(win.screen, journal, position=(2, 1), text_align='right', card_size=(1, 2))
-        watch_list += card.watched()
-        card_list.append(card)
+        append_card(cards.CurrentSystemCard, position=(2, 1), text_align='right', card_size=(1, 2))
         # route card
-        card = cards.RouteCard(win.screen, journal, position=(0, 0), text_align='left', card_size=(3, 1))
-        watch_list += card.watched()
-        card_list.append(card)
+        append_card(cards.RouteCard, position=(0, 0), text_align='left', card_size=(3, 1))
+
+    elif args.activity == 'race':
+        if args.overlay:
+            append_card(cards.RaceCard, position=(2, 0), card_size=(1, 1))
+        else:
+            append_card(cards.RaceCard, position=(0, 0), card_size=(3, 3))
+
+    elif args.activity == 'create-race':
+        if args.overlay:
+            append_card(cards.CreateRaceCard, position=(2, 0), card_size=(1, 1))
+        else:
+            append_card(cards.CreateRaceCard, position=(0, 0), card_size=(3, 3))
     else:
         raise NotImplementedError("{} not implemented".format(args.activity))
 
@@ -77,14 +105,31 @@ def main(*args):
 
     win.screen.fill(win.mask_color)
 
+    sim = None
+    if args.simulator:
+        sim = SimRunner(Simulator(args.simulator).get_generator())
+
     while win.loop():
-        if journal.has_new():
-            win.screen.fill(win.mask_color)
-            for card in card_list:
-                card.render()
+
+        if sim:
+            sim.run()
+
+        journal.refresh()
+        win.screen.fill(win.mask_color)
+        for card in card_list:
+            card.render()
 
         pygame.display.update()
 
+
+class SimRunner():
+    active = True
+    def __init__(self, sim):
+        self.sim = sim
+
+    def run(self):
+        if self.active:
+            self.active = next(self.sim)
 
 if __name__ == "__main__":
     main()

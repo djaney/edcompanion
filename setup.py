@@ -8,9 +8,11 @@ requirements = [
 if os.name == 'nt':
     requirements.append('pywin32')
 
+VERSION = '0.2.1'
+
 setup(
     name='edcompanion',
-    version='0.2.1',
+    version=VERSION,
     url='https://github.com/djaney/edcompanion',
     author='Djane Rey Mabelin',
     author_email='thedjaney@gmail.com',
