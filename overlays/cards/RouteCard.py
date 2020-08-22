@@ -80,19 +80,19 @@ class RouteCard(BaseCard):
         if self.eta:
             if self.eta.total_seconds() < 60:
                 self.print_line(self.surface, self.normal_font,
-                                "ETA: {} seconds".format(self.eta.seconds))
+                                "ETA: {:0.1f} seconds".format(self.eta.seconds))
             elif self.eta.total_seconds() < 60 * 60:
                 self.print_line(self.surface, self.normal_font,
-                                "ETA: {} minutes".format(self.eta.seconds // 60))
+                                "ETA: {:0.1f} minutes".format(self.eta.seconds / 60))
             elif self.eta.total_seconds() < 60 * 60 * 24:
                 self.print_line(self.surface, self.normal_font,
-                                "ETA: {} hours".format(self.eta.seconds / 60 // 60))
+                                "ETA: {:0.1f} hours".format(self.eta.seconds / 60 / 60))
             elif self.eta.total_seconds() < 60 * 60 * 24 * 7:
                 self.print_line(self.surface, self.normal_font,
-                                "ETA: {} days".format(self.eta.seconds / 60 / 60 // 24))
+                                "ETA: {:0.1f} days".format(self.eta.seconds / 60 / 60 / 24))
             else:
                 self.print_line(self.surface, self.normal_font,
-                                "ETA: {} weeks".format(self.eta.seconds / 60 / 60 / 24 // 7))
+                                "ETA: {:0.1f} weeks".format(self.eta.seconds / 60 / 60 / 24 / 7))
 
         for list_index, (position_index, stop) in enumerate(route_slice):
             radius = 20
