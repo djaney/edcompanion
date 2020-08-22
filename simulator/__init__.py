@@ -223,14 +223,13 @@ class Simulator:
         lng = 0
         heading = 1
         speed = 0.02
-        self.write_status(status_params((lat, lng), 5000))
+        self.write_status(status_params((lat, lng), 6371000))
 
         # skip frames
         for _ in range(30):
             yield True
 
         self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
-
         yield True
 
         random.seed('funky race')
@@ -254,7 +253,7 @@ class Simulator:
 
             lat += speed * math.cos(rad)
             lng += speed * math.sin(rad)
-            self.write_status(status_params((lat, lng), 5000))
+            self.write_status(status_params((lat, lng), 6371000))
             yield True
 
     def reset(self):

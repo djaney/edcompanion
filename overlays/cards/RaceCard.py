@@ -13,6 +13,7 @@ class RaceCard(BaseCard):
 
     FIGHTER_MINIMUM_DEGREE = 0.02
     SRV_MINIMUM_DEGREE = 0.01
+    MIN_DISTANCE = 0.5
 
     def __init__(self, *args, **kwargs):
         super(RaceCard, self).__init__(*args, **kwargs)
@@ -79,7 +80,7 @@ class RaceCard(BaseCard):
         lng = status.get('Longitude', None)
         alt = status.get('Altitude', None)
         # km
-        rad = status.get('PlanetRadius', 6371)
+        rad = status.get('PlanetRadius', 6371000)
         return lat, lng, rad, alt
 
     def perform_build_data(self):
@@ -88,7 +89,7 @@ class RaceCard(BaseCard):
 
         wp_lat = current_waypoint['lat']
         wp_lng = current_waypoint['lng']
-        wp_range_km = current_waypoint.get('range', 0.5)
+        wp_range_km = current_waypoint.get('range', self.MIN_DISTANCE)
         wp_event = current_waypoint['event']
 
         for e in self.journal.events:
@@ -211,11 +212,11 @@ class RaceCard(BaseCard):
 
         text = None
 
-
         if end and start:
             elapsed = (end - start)
-            text = "{:02}:{:02}:{:02}:{:02} FINISHED".format(elapsed.seconds // 60 // 60, elapsed.seconds // 60, elapsed.seconds,
-                                                    elapsed.microseconds // 1000)
+            text = "{:02}:{:02}:{:02}:{:02} FINISHED".format(elapsed.seconds // 60 // 60, elapsed.seconds // 60,
+                                                             elapsed.seconds,
+                                                             elapsed.microseconds // 1000)
         elif start:
             elapsed = (datetime.now() - self.time_start)
             text = "{:02}:{:02}:{:02}:{:02}".format(elapsed.seconds // 60 // 60, elapsed.seconds // 60, elapsed.seconds,
@@ -240,19 +241,16 @@ class RaceCard(BaseCard):
 
             if lat and lng and t_lat and t_lng:
                 rad = math.atan2(t_lng - lng, t_lat - lat)
-                deg = math.degrees(rad)
+                deg = math.degrees(rad) % 360
 
                 text = "NEXT Lat: {:0.3f} Lng: {:0.3f}, Hdg: {:0.3f}".format(t_lat, t_lng, deg)
                 self.print_line(self.surface, self.h1_font, text, constants.COLOR_COCKPIT)
-
-
 
     def perform_draw(self):
         index, _ = self.get_current_waypoint()
         self.__draw_time(self.time_start, self.time_end)
         self.__draw_next_waypoint()
         self.draw_waypoints(self.race['waypoints'], index)
-
 
 
 class CreateRaceCard(RaceCard):
@@ -281,6 +279,11 @@ class CreateRaceCard(RaceCard):
                 if e['event'] in ['DockFighter', 'Touchdown', 'Pass'] and e['timestamp'] > self.race_create_start_time:
                     lat, lng, planet_radius, alt = self.get_ship_position()
                     wp = {"event": e['event'], "lat": lat, "lng": lng}
+                    last = self.new_map_waypoints[-1]
+                    distance = self.get_distance_as_km((lat, lng), (last['lat'], last['lng']), planet_radius)
+                    if distance < self.MIN_DISTANCE:
+                        break
+
                     self.new_map_waypoints.append(wp)
                     self.save()
                     break
