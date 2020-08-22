@@ -229,7 +229,7 @@ class RaceCard(BaseCard):
         index, _ = self.get_current_waypoint()
         index += 1
 
-        if self.is_race_started():
+        if 0 <= index < len(self.race['waypoints']):
             next_wp = self.race['waypoints'][index]
         else:
             next_wp = self.race['waypoints'][0]
@@ -242,8 +242,10 @@ class RaceCard(BaseCard):
             if lat and lng and t_lat and t_lng:
                 rad = math.atan2(t_lng - lng, t_lat - lat)
                 deg = math.degrees(rad) % 360
+                planet_radius = self.journal.get_status().get("PlanetRadius")
+                distance = self.get_distance_as_km((lat, lng), (t_lat, t_lng), planet_radius)
 
-                text = "NEXT Lat: {:0.3f} Lng: {:0.3f}, Hdg: {:0.3f}".format(t_lat, t_lng, deg)
+                text = "{} Lat: {:0.3f} Lng: {:0.3f} Hdg: {:0.3f} Dst: {:0.3f}".format(next_wp.get('event'), t_lat, t_lng, deg, distance)
                 self.print_line(self.surface, self.h1_font, text, constants.COLOR_COCKPIT)
 
     def perform_draw(self):
@@ -255,6 +257,7 @@ class RaceCard(BaseCard):
 
 class CreateRaceCard(RaceCard):
     new_map_waypoints = []
+    body_name = None
 
     def __init__(self, *args, **kwargs):
         super(CreateRaceCard, self).__init__(*args, **kwargs)
@@ -263,7 +266,7 @@ class CreateRaceCard(RaceCard):
         self.race_filename = self.race_create_start_time.strftime("race_%Y%m%d%H%M%S.json")
 
     def save(self):
-        self.journal.config.save_race(self.race_filename, self.race_name, self.new_map_waypoints)
+        self.journal.config.save_race(self.race_filename, self.race_name, self.body_name, self.new_map_waypoints)
 
     def perform_build_data(self):
         if len(self.new_map_waypoints) == 0:
@@ -273,6 +276,9 @@ class CreateRaceCard(RaceCard):
                     wp = {"event": e['event'], "lat": lat, "lng": lng}
                     self.new_map_waypoints.append(wp)
                     self.save()
+                    status = self.journal.get_status()
+                    if status:
+                        self.body_name = status.get('BodyName')
                     break
         else:
             for e in self.journal.events:
@@ -281,7 +287,7 @@ class CreateRaceCard(RaceCard):
                     wp = {"event": e['event'], "lat": lat, "lng": lng}
                     last = self.new_map_waypoints[-1]
                     distance = self.get_distance_as_km((lat, lng), (last['lat'], last['lng']), planet_radius)
-                    if distance < self.MIN_DISTANCE:
+                    if distance < self.MIN_DISTANCE and e['event'] == 'Pass':
                         break
 
                     self.new_map_waypoints.append(wp)

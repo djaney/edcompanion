@@ -8,7 +8,7 @@ requirements = [
 if os.name == 'nt':
     requirements.append('pywin32')
 
-VERSION = '0.2.1'
+VERSION = '0.2.2'
 
 setup(
     name='edcompanion',

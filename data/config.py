@@ -72,10 +72,11 @@ class Config(object):
         with open(self.selected_race, 'r') as fp:
             return json.load(fp)
 
-    def save_race(self, filename, name, waypoints):
+    def save_race(self, filename, name, body, waypoints):
         os.makedirs(os.path.join(self.dir, self.RACES_DIR), exist_ok=True)
         with open(os.path.join(self.dir, self.RACES_DIR, filename), 'w') as fp:
             json.dump({
             "name": name,
+            "body": body,
             "waypoints": waypoints
         }, fp)

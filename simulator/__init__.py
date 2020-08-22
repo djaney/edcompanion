@@ -203,6 +203,7 @@ class Simulator:
                 "Latitude": coord[0],
                 "Longitude": coord[1],
                 "PlanetRadius": rad,
+                'BodyName': 'Sample 1'
             }
 
         def journal_params(event=None):
