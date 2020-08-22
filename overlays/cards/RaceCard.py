@@ -86,7 +86,7 @@ class RaceCard(BaseCard):
     def perform_build_data(self):
 
         current_waypoint_index, current_waypoint = self.get_current_waypoint()
-        status = journal.get_status()
+        status = self.journal.get_status()
 
         wp_lat = current_waypoint['lat']
         wp_lng = current_waypoint['lng']

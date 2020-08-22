@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 from screen import Window
-from data.journal import JournalWatcher
+from ..data.journal import JournalWatcher
 import pygame
 import argparse
 import re
