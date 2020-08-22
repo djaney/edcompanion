@@ -22,7 +22,8 @@ setup(
     install_requires=requirements,
     entry_points={
         'gui_scripts': [
-            'edcompanion=scripts.launcher:main',
+            'edcompanion-launcher=scripts.launcher:main',
+            'edcompanion=scripts.edcompanion:main',
         ]
     },
     package_data={
