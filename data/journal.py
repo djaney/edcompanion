@@ -119,7 +119,7 @@ class JournalWatcher:
             if len(self.__events) > 0:
                 timestamp = self.__events[-1]['timestamp']
             else:
-                timestamp = datetime.now()
+                timestamp = datetime.utcnow()
 
             if self.has_new_status:
                 self.__events.append({

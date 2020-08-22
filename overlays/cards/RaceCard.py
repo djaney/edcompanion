@@ -263,7 +263,7 @@ class CreateRaceCard(RaceCard):
 
     def __init__(self, *args, **kwargs):
         super(CreateRaceCard, self).__init__(*args, **kwargs)
-        self.race_create_start_time = datetime.now()
+        self.race_create_start_time = datetime.utcnow()
         self.race_name = self.race_create_start_time.strftime("Race %Y%m%d%H%M%S")
         self.race_filename = self.race_create_start_time.strftime("race_%Y%m%d%H%M%S.json")
 
@@ -273,14 +273,15 @@ class CreateRaceCard(RaceCard):
     def perform_build_data(self):
         if len(self.new_map_waypoints) == 0:
             for e in self.journal.events:
+                print("event", e['event'], e['timestamp'], self.race_create_start_time)
                 if e['event'] in ['LaunchFighter', 'Liftoff'] and e['timestamp'] > self.race_create_start_time:
                     lat, lng, planet_radius, alt = self.get_ship_position()
                     wp = {"event": e['event'], "lat": lat, "lng": lng}
                     self.new_map_waypoints.append(wp)
-                    self.save()
                     status = self.journal.get_status()
                     if status:
                         self.body_name = status.get('BodyName')
+                    self.save()
                     break
         else:
             for e in self.journal.events:
