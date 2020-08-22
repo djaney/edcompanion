@@ -86,14 +86,16 @@ class RaceCard(BaseCard):
     def perform_build_data(self):
 
         current_waypoint_index, current_waypoint = self.get_current_waypoint()
+        status = journal.get_status()
 
         wp_lat = current_waypoint['lat']
         wp_lng = current_waypoint['lng']
         wp_range_km = current_waypoint.get('range', self.MIN_DISTANCE)
         wp_event = current_waypoint['event']
+        body_name = current_waypoint.get('body_name')
 
         for e in self.journal.events:
-            if e['event'] == wp_event:
+            if e['event'] == wp_event and status and status.get('BodyName') == body_name:
                 lat, lng, planet_radius, alt = self.get_ship_position()
                 if lat is not None and lng is not None:
                     distance = self.get_distance_as_km((lat, lng), (wp_lat, wp_lng), planet_radius)
