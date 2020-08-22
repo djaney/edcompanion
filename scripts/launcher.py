@@ -1,12 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from overlays.constants import TITLE
-from scripts import edcompanion
 from data.config import Config
-import json
+import argparse
+import os
+from pipes import quote
 
 
-def open_companion(*args, options=None):
+def open_companion(*args, options=None, cmd=None):
     args = list(args)
     def open_window():
         if options is not None:
@@ -18,12 +19,15 @@ def open_companion(*args, options=None):
                 final_args.append(a())
             else:
                 final_args.append(a)
-        edcompanion.main(*final_args)
+
+        command_string = "{} {}".format(cmd, " ".join(quote(a) for a in final_args))
+        print(command_string)
+        os.system(command_string)
 
     return open_window
 
 
-def select_race(is_overlay):
+def select_race(is_overlay, cmd=None):
     def execute():
         conf = Config()
         filename = filedialog.askopenfilename(
@@ -39,7 +43,8 @@ def select_race(is_overlay):
                     'race',
                     '--arg1',
                     filename,
-                    options={"is_overlay": is_overlay}
+                    options={"is_overlay": is_overlay},
+                    cmd=cmd
                 )()
             else:
                 open_companion(
@@ -48,13 +53,18 @@ def select_race(is_overlay):
                     '800x900',
                     '--arg1',
                     filename,
-                    options={"is_overlay": is_overlay}
+                    options={"is_overlay": is_overlay},
+                    cmd=cmd
                 )()
 
     return execute
 
 
 def main():
+    parser = argparse.ArgumentParser(description='Launcher')
+    parser.add_argument('--cmd', default="edcompanion", type=str)
+    args = parser.parse_args()
+
     root = tk.Tk()
     root.title(TITLE)
     root.geometry("300x300")
@@ -70,7 +80,8 @@ def main():
             parent, text="Exploration",
             command=open_companion(
                 'exploration',
-                options={"is_overlay": is_overlay}
+                options={"is_overlay": is_overlay},
+                cmd=args.cmd
             )
         ).pack(fill="x")
 
@@ -82,14 +93,15 @@ def main():
 
         tk.Button(
             parent, text="Select",
-            command=select_race(is_overlay)
+            command=select_race(is_overlay, cmd=args.cmd)
         ).pack(fill="x")
 
         tk.Button(
             parent, text="Create",
             command=open_companion(
                 'create-race',
-                options={"is_overlay": is_overlay}
+                options={"is_overlay": is_overlay},
+                cmd=args.cmd
             )
         ).pack(fill="x")
 
