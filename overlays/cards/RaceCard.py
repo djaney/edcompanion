@@ -92,7 +92,7 @@ class RaceCard(BaseCard):
         wp_lng = current_waypoint['lng']
         wp_range_km = current_waypoint.get('range', self.MIN_DISTANCE)
         wp_event = current_waypoint['event']
-        body_name = current_waypoint.get('body_name')
+        body_name = self.race.get('body')
 
         for e in self.journal.events:
             if e['event'] == wp_event and status and status.get('BodyName') == body_name:
@@ -229,7 +229,6 @@ class RaceCard(BaseCard):
 
     def __draw_next_waypoint(self):
         index, _ = self.get_current_waypoint()
-        index += 1
 
         if 0 <= index < len(self.race['waypoints']):
             next_wp = self.race['waypoints'][index]
@@ -252,8 +251,8 @@ class RaceCard(BaseCard):
 
     def perform_draw(self):
         index, _ = self.get_current_waypoint()
-        self.__draw_time(self.time_start, self.time_end)
         self.__draw_next_waypoint()
+        self.__draw_time(self.time_start, self.time_end)
         self.draw_waypoints(self.race['waypoints'], index)
 
 

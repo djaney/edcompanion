@@ -31,7 +31,7 @@ def select_race(is_overlay, cmd=None):
     def execute():
         conf = Config()
         filename = filedialog.askopenfilename(
-            initialdir=conf.dir,
+            initialdir=os.path.join(conf.dir, conf.RACES_DIR),
             title="Select file",
             filetypes=(
                 ("Race JSON", "*.json"),

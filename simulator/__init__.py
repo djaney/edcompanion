@@ -224,14 +224,6 @@ class Simulator:
         lng = 0
         heading = 1
         speed = 0.02
-        self.write_status(status_params((lat, lng), 6371000))
-
-        # skip frames
-        for _ in range(30):
-            yield True
-
-        self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
-        yield True
 
         random.seed('funky race')
 
@@ -242,7 +234,13 @@ class Simulator:
                 yield True
 
             iteration += 1
-            if iteration == 100:
+
+            if iteration == 20:
+                self.write((journal_params, {"event": "LaunchFighter"}), sleep=False)
+                yield True
+                continue
+
+            elif iteration == 100:
                 self.write((journal_params, {"event": "DockFighter"}), sleep=False)
                 yield False
                 continue
