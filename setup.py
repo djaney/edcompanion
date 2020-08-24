@@ -4,6 +4,7 @@ import os
 requirements = [
         'pygame>=1.9,<2',
         'tk-tools==0.13.0',
+        'requests==2.24.0'
     ]
 if os.name == 'nt':
     requirements.append('pywin32')

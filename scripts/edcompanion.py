@@ -5,7 +5,7 @@ import pygame
 import argparse
 import re
 from overlays import cards
-from data.config import Config, get_config_dir, get_logger_config
+from data.config import Config, get_journal_dir, get_logger_config
 from simulator import Simulator
 import logging
 
@@ -13,13 +13,11 @@ logging.basicConfig(**get_logger_config())
 
 
 def main(*args):
-    default_dir = get_config_dir()
-
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
     parser.add_argument('activity', type=str, choices=['exploration', 'race', 'create-race'], default='exploration')
     parser.add_argument('--background', '-b', type=str, default='black', help='background color name (ex. black)')
     parser.add_argument('--size', '-s', type=str, default='720p', help="[width]x[height] or 720p or 1080p")
-    parser.add_argument('--dir', '-d', type=str, default=default_dir, help="path to journal directory")
+    parser.add_argument('--dir', '-d', type=str, default=get_journal_dir(), help="path to journal directory")
     parser.add_argument('--overlay', '-o', default=False, action='store_true', help="Overlay mode (windows only)")
     parser.add_argument('--config', '-c', type=str, default='', help="config path")
     parser.add_argument('--simulator', type=str, choices=['race', 'exploration'], default=None)

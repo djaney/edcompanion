@@ -8,6 +8,7 @@ import random
 import os
 import glob
 import argparse
+import requests
 
 
 class Simulator:
@@ -17,7 +18,7 @@ class Simulator:
 
     def __init__(self, type):
         if type not in ['race', 'exploration']:
-            raise NotImplementedError(type+ " simulator")
+            raise NotImplementedError(type + " simulator")
         self.type = type
 
     def get_generator(self):
@@ -56,7 +57,7 @@ class Simulator:
             "timestamp": self.get_timestamp(),
             "event": "Scan",
             "ScanType": "AutoScan",
-            "BodyName": "{} {}".format(star_system, body),
+            "BodyName": body,
             "BodyID": body_id,
             "Parents": [],
             "StarSystem": star_system,
@@ -83,13 +84,22 @@ class Simulator:
             'Route': []
         }
 
-        for i in range(start, start + random.randint(3, 30)):
-            system_name = self.get_system_name(i)
+        # get systems
+        stars = requests.get('https://www.edsm.net/api-v1/sphere-systems?radius=10&showPrimaryStar=1&showCoordinates=1'
+                             '&systemName=Sol').json()
+
+        for i, star in enumerate(stars):
+
+            if 'primaryStar' in star:
+                star_class = star['primaryStar']['type'].split(" ")[0]
+            else:
+                star_class = random.choice('KBGFOAMTBH')
+
             route_dict['Route'].append({
-                'StarSystem': system_name,
+                'StarSystem': star.get('name'),
                 'SystemAddress': self.get_system_address(i),
-                'StarPos': self.get_star_pos(i),
-                'StarClass': random.choice('KBGFOAMTBH'),
+                'StarPos': [star['coords'][j] for j in 'xyz'],
+                'StarClass': star_class,
             })
 
         with open('.tmp/NavRoute.json', 'w') as file:
@@ -149,6 +159,26 @@ class Simulator:
              "BodyType": "Star", "JumpDist": 54.522,
              "FuelUsed": 10, "FuelLevel": 50})
 
+    def get_all_scanned(self, **kwargs):
+        return json.dumps({
+            "timestamp": self.get_timestamp(),
+            "event": "FSSAllBodiesFound",
+            "SystemName": kwargs.get('name', ''),
+            "SystemAddress": 0,
+            "Count": kwargs.get('bodyCount', 0)
+        })
+
+    def get_saa_scanned(self, **kwargs):
+        return json.dumps({
+            "timestamp": self.get_timestamp(),
+            "event": "SAAScanComplete",
+            "BodyName": kwargs.get('name'),
+            "SystemAddress": 634950357410,
+            "BodyID": kwargs.get('bodyId', 0),
+            "ProbesUsed": 10,
+            "EfficiencyTarget": 7
+        })
+
     def exploration(self):
 
         # clear temporary journal
@@ -167,18 +197,31 @@ class Simulator:
             route = self.write_route(system_index)
             for r in route['Route']:
                 # generate system for each route
-                system_events = [
-                    (self.gen_scan_body, {'body_id': 6, 'body': 'A5', 'mapped': False, 'planet_class': 'Icy Body'}),
-                    (self.gen_scan_body, {'body_id': 1, 'body': 'A', 'star_type': r['StarClass']}),
-                    (self.gen_scan_body,
-                     {'body_id': 2, 'body': 'A1', 'terraform_state': 'Terraformable', 'planet_class': 'Icy Body'}),
-                    (self.gen_scan_body, {'body_id': 3, 'body': 'A2', 'landable': True, 'planet_class': 'Icy Body'}),
-                    (self.gen_scan_body, {'body_id': 4, 'body': 'A3', 'planet_class': 'Earth-like world'}),
-                    (self.gen_scan_body, {'body_id': 5, 'body': 'A4', 'discovered': False, 'planet_class': 'Icy Body'}),
-                ]
+                s = requests.get(
+                    'https://www.edsm.net/api-system-v1/bodies?systemName={}'.format(r['StarSystem'])).json()
+
+                system_events = []
+                for b in s['bodies']:
+                    b_dict = {
+                        'body_id': b['bodyId'],
+                        'body': b['name'],
+                        'mapped': False,
+                        'discovered': False,
+                    }
+                    if b['type'] == 'Planet' and 'subType' in b:
+                        b_dict['planet_class'] = b['subType']
+                    if b['type'] == 'Star' and 'subType' in b:
+                        b_dict['star_type'] = b['subType'].split(" ")[0]
+                    if b['type'] == 'Planet' and 'terraformingState' in b:
+                        b_dict['terraform_state'] = b['terraformingState'] if b[
+                                                                                  'terraformingState'] == 'Terraformable' else ''
+                    if b['type'] == 'Planet' and 'isLandable' in b:
+                        b_dict['landable'] = b['isLandable']
+                    system_events.append((self.gen_scan_body, b_dict))
+                    system_events.append((self.get_saa_scanned, b))
                 # write bodies
                 for body_index, (func, args) in enumerate(system_events):
-                    star_system = self.get_system_name(system_index)
+                    star_system = r['StarSystem']
 
                     args.update({
                         'star_system': star_system,
@@ -188,9 +231,12 @@ class Simulator:
                     yield True
                     for _ in range(30):
                         yield True
+                self.write((self.get_all_scanned, s), sleep=False)
                 # jump to next
                 system_index += 1
+
                 self.write((self.get_fsd_jump, {'index': system_index}), sleep=False)
+
                 for _ in range(30):
                     yield True
                 yield True

@@ -60,7 +60,8 @@ class CurrentSystemCard(BaseCard):
 
     @staticmethod
     def __get_item_label(b):
-        if b['BodyName'][0:len(b['StarSystem'])] == b['StarSystem']:
+        if b['BodyName'][0:len(b['StarSystem'])] == b['StarSystem'] and \
+                b['BodyName'] != b['StarSystem']:
             item_label = b['BodyName'][len(b['StarSystem']):]
         else:
             item_label = b['BodyName']

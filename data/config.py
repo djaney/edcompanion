@@ -2,8 +2,18 @@ import platform
 import os
 import json
 import logging
-import sys
 
+
+def get_journal_dir():
+    if platform.system().lower() == 'linux':
+        journal_dir = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
+                      'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER', ''))
+    elif platform.system().lower() == 'windows':
+        journal_dir = '{}\\Saved Games\\Frontier Developments\\Elite Dangerous' \
+            .format(os.environ.get('USERPROFILE', ''))
+    else:
+        journal_dir = None
+    return journal_dir
 
 def get_config_dir():
     if platform.system().lower() == 'linux':
@@ -41,12 +51,7 @@ class Config(object):
 
     def __init__(self, config_dir=None):
         if config_dir is None:
-            if platform.system().lower() == 'linux':
-                self.dir = '/home/{}/.edcompanion'.format(os.environ.get('USER', ''))
-            elif platform.system().lower() == 'windows':
-                self.dir = '{}\\Saved Games\\edcompanion'.format(os.environ.get('USERPROFILE', ''))
-            else:
-                raise OSError("Unsupported OS")
+            config_dir = get_config_dir()
         else:
             self.dir = config_dir
 
