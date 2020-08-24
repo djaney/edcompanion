@@ -5,21 +5,15 @@ import pygame
 import argparse
 import re
 from overlays import cards
-import platform
-import os
-from data.config import Config
+from data.config import Config, get_config_dir, get_logger_config
 from simulator import Simulator
+import logging
+
+logging.basicConfig(**get_logger_config())
 
 
 def main(*args):
-    if platform.system().lower() == 'linux':
-        default_dir = '/home/{}/.local/share/Steam/steamapps/compatdata/359320/pfx/drive_c/users/steamuser/' \
-                      'Saved Games/Frontier Developments/Elite Dangerous'.format(os.environ.get('USER', ''))
-    elif platform.system().lower() == 'windows':
-        default_dir = '{}\\Saved Games\\Frontier Developments\\Elite Dangerous' \
-            .format(os.environ.get('USERPROFILE', ''))
-    else:
-        default_dir = None
+    default_dir = get_config_dir()
 
     parser = argparse.ArgumentParser(description='Show overlay for streaming purposes')
     parser.add_argument('activity', type=str, choices=['exploration', 'race', 'create-race'], default='exploration')
@@ -124,6 +118,7 @@ def main(*args):
 
 class SimRunner():
     active = True
+
     def __init__(self, sim):
         self.sim = sim
 
@@ -131,5 +126,10 @@ class SimRunner():
         if self.active:
             self.active = next(self.sim)
 
+
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.exception(e)
+        raise e

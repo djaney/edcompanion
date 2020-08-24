@@ -1,10 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from overlays.constants import TITLE
-from data.config import Config
+from data.config import Config, get_logger_config
 import argparse
 import os
 from shlex import quote
+import logging
+
+logging.basicConfig(**get_logger_config())
 
 
 def open_companion(*args, options=None, cmd=None):
@@ -122,4 +125,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        logging.exception(e)
+        raise e

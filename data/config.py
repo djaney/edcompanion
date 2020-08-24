@@ -1,10 +1,35 @@
 import platform
 import os
 import json
+import logging
+import sys
+
+
+def get_config_dir():
+    if platform.system().lower() == 'linux':
+        config_dir = '/home/{}/.edcompanion'.format(os.environ.get('USER', ''))
+    elif platform.system().lower() == 'windows':
+        config_dir = '{}\\Saved Games\\edcompanion'.format(os.environ.get('USERPROFILE', ''))
+    else:
+        raise OSError("Unsupported OS")
+
+    return config_dir
+
+
+def get_logger_config():
+    logs_dir = os.path.join(get_config_dir(), Config.LOGS_DIR)
+    os.makedirs(logs_dir, exist_ok=True)
+    crash_log = os.path.join(logs_dir, "crash.log")
+
+    return dict(filename=crash_log,
+                format='[%(levelname)s][%(asctime)s]  %(message)s',
+                datefmt='%H:%M:%S',
+                level=logging.ERROR)
 
 
 class Config(object):
     RACES_DIR = 'races'
+    LOGS_DIR = 'logs'
     MAIN_CONFIG = 'config.json'
     CONFIG_ITEMS_MAP = {
         "edsmApiKey": "edsm_api_key"
@@ -76,7 +101,7 @@ class Config(object):
         os.makedirs(os.path.join(self.dir, self.RACES_DIR), exist_ok=True)
         with open(os.path.join(self.dir, self.RACES_DIR, filename), 'w') as fp:
             json.dump({
-            "name": name,
-            "body": body,
-            "waypoints": waypoints
-        }, fp)
+                "name": name,
+                "body": body,
+                "waypoints": waypoints
+            }, fp)
