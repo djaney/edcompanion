@@ -4,7 +4,7 @@ from overlays.constants import TITLE
 from data.config import Config
 import argparse
 import os
-from pipes import quote
+from shlex import quote
 
 
 def open_companion(*args, options=None, cmd=None):
